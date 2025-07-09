@@ -1,0 +1,128 @@
+package response
+
+type Classification struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	TypeID   int    `json:"typeId"`
+	TypeName string `json:"typeName"`
+}
+
+type CustomLabelForStockZeroByCity struct {
+	CityCode    string `json:"cityCode"`
+	CustomLabel string `json:"customLabel"`
+}
+
+type FullPriceByCity struct {
+	CityCode  string  `json:"cityCode"`
+	FullPrice float64 `json:"fullPrice"`
+}
+
+type LastUpdate struct {
+	JobName   string `json:"jobName"`
+	TimeStamp int64  `json:"timeStamp"`
+}
+
+type CatalogProductInformation struct {
+	Prime                         string                          `json:"Prime"`
+	RMSProvider                   string                          `json:"RMS_PROVIDER"`
+	Collections                   []string                        `json:"_collections"`
+	AnywaySelling                 bool                            `json:"anywaySelling"`
+	Barcode                       string                          `json:"barcode"`
+	BarcodeList                   []string                        `json:"barcodeList"`
+	Brand                         string                          `json:"brand"`
+	Categorie                     string                          `json:"categorie"`
+	Classification                []Classification                `json:"classification"`
+	CustomLabelForStockZero       string                          `json:"customLabelForStockZero"`
+	CustomLabelForStockZeroByCity []CustomLabelForStockZeroByCity `json:"customLabelForStockZeroByCity"`
+	CustomTag                     *string                         `json:"customTag"`
+	DeliveryTime                  string                          `json:"deliveryTime"`
+	Departments                   []string                        `json:"departments"`
+	DesHiddenSEO                  *string                         `json:"desHiddenSEO"`
+	FullPrice                     float64                         `json:"fullPrice"`
+	FullPriceByCity               []FullPriceByCity               `json:"fullPriceByCity"`
+	Generics                      any                             `json:"genericos"`
+	GrayDescription               string                          `json:"grayDescription"`
+	HasStock                      bool                            `json:"hasStock"`
+	Highlight                     any                             `json:"highlight"`
+	ID                            string                          `json:"id"`
+	IDOffersGroup                 []int                           `json:"idOffersGroup"`
+	IDHighlights                  []int                           `json:"id_highlights"`
+	IDSuggested                   []int                           `json:"id_suggested"`
+	IsCupon                       int                             `json:"is_cupon"`
+	LabelPum                      string                          `json:"labelPum"`
+	LargeDescription              string                          `json:"largeDescription"`
+	LastUpdate                    LastUpdate                      `json:"lastUpdate"`
+	ListUrlImages                 []string                        `json:"listUrlImages"`
+	Marca                         string                          `json:"marca"`
+	MeasurePum                    float64                         `json:"measurePum"`
+	MediaDescription              string                          `json:"mediaDescription"`
+	MediaImageUrl                 string                          `json:"mediaImageUrl"`
+	MetadesSEO                    *string                         `json:"metadesSEO"`
+	MetatituloSEO                 *string                         `json:"metatituloSEO"`
+	ObjectID                      string                          `json:"objectID"`
+	OfferDescription              string                          `json:"offerDescription"`
+	OfferEndDate                  int64                           `json:"offerEndDate"`
+	OfferPrice                    float64                         `json:"offerPrice"`
+	OfferPriceByCity              []interface{}                   `json:"offerPriceByCity"`
+	OfferStartDate                int64                           `json:"offerStartDate"`
+	OfferText                     string                          `json:"offerText"`
+	OnlyOnline                    bool                            `json:"onlyOnline"`
+	Outofstore                    bool                            `json:"outofstore"`
+	PrimeDescription              string                          `json:"primeDescription"`
+	PrimePrice                    float64                         `json:"primePrice"`
+	PrimeTextDiscount             string                          `json:"primeTextDiscount"`
+	RequirePrescription           any                             `json:"requirePrescription"`
+	RmsClass                      string                          `json:"rms_class"`
+	RmsDeparment                  string                          `json:"rms_deparment"`
+	RmsGroup                      string                          `json:"rms_group"`
+	RmsSubclass                   string                          `json:"rms_subclass"`
+	Sales                         any                             `json:"sales"`
+	Spaces                        any                             `json:"spaces"`
+	Status                        string                          `json:"status"`
+	StoresWithOffer               []int                           `json:"stores_with_offer"`
+	StoresWithPrimeOffer          []interface{}                   `json:"stores_with_prime_offer"`
+	StoresWithStock               []int                           `json:"stores_with_stock"`
+	SubCategory                   string                          `json:"subCategory"`
+	Supplier                      string                          `json:"supplier"`
+	TaxRate                       int                             `json:"taxRate"`
+	URL                           string                          `json:"url"`
+	UrlCanonical                  *string                         `json:"urlCanonical"`
+}
+
+type CatalogProductsInformation struct {
+	Results []CatalogProductInformation `json:"results"`
+}
+
+type CatalogProductsInformationByQuery struct {
+	Results []CatalogProductsInformationByQueryResults `json:"results"`
+}
+
+type CatalogProductsInformationByQueryResults struct {
+	AppliedRelevancyStrictness int                         `json:"appliedRelevancyStrictness"`
+	AroundLatLng               string                      `json:"aroundLatLng"`
+	AutomaticRadius            string                      `json:"automaticRadius"`
+	ExhaustiveFacetsCount      bool                        `json:"exhaustiveFacetsCount"`
+	ExhaustiveNbHits           bool                        `json:"exhaustiveNbHits"`
+	Hits                       []CatalogProductInformation `json:"hits"`
+	HitsPerPage                int                         `json:"hitsPerPage"`
+	Index                      string                      `json:"index"`
+	IndexUsed                  string                      `json:"indexUsed"`
+	Length                     int                         `json:"length"`
+	Message                    string                      `json:"message"`
+	NbHits                     int                         `json:"nbHits"`
+	NbPages                    int                         `json:"nbPages"`
+	NbSortedHits               int                         `json:"nbSortedHits"`
+	Offset                     int                         `json:"offset"`
+	Page                       int                         `json:"page"`
+	Params                     string                      `json:"params"`
+	ParsedQuery                string                      `json:"parsedQuery"`
+	ProcessingTimeMS           int                         `json:"processingTimeMS"`
+	Query                      string                      `json:"query"`
+	QueryAfterRemoval          string                      `json:"queryAfterRemoval"`
+	QueryID                    string                      `json:"queryID"`
+	ServerUsed                 string                      `json:"serverUsed"`
+	TimeoutCounts              bool                        `json:"timeoutCounts"`
+	TimeoutHits                bool                        `json:"timeoutHits"`
+	AbTestVariantID            int                         `json:"abTestVariantID"`
+	AbTestID                   int                         `json:"abTestID"`
+}

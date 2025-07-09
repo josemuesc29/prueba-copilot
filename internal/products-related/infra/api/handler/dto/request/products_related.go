@@ -1,0 +1,7 @@
+package request
+
+type SameBrandRequestDto struct {
+	CountryID string `uri:"countryId" binding:"required"`
+	ItemID    string `uri:"itemId" binding:"required"`
+	City      string `header:"X-Custom-City"`
+}
