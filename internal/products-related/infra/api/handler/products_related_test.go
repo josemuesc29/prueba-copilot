@@ -107,7 +107,7 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		var errorResponse sharedInfraResponse.GenericResponse
+		var errorResponse sharedInfraResponse.genericResponse // <--- CORRECCIÓN AQUÍ
 		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorResponse.Code)
@@ -128,7 +128,7 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		var errorResponse sharedInfraResponse.GenericResponse
+		var errorResponse sharedInfraResponse.genericResponse // <--- CORRECCIÓN AQUÍ
 		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorResponse.Code)
@@ -192,7 +192,7 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
-		var errorResponse sharedInfraResponse.GenericResponse
+		var errorResponse sharedInfraResponse.genericResponse // <--- CORRECCIÓN AQUÍ
 		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusText(http.StatusInternalServerError), errorResponse.Code)
