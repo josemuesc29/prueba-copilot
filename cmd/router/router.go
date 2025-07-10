@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const basePath = "/catalog-item/r/:countryId/v1/items"
+const basePath = "/catalog-item/r/:countryId/v1"
 
 type Router struct {
 	healthGroup          groups.HealthGroup

@@ -15,9 +15,9 @@ type configEnv struct {
 	ApplicationIDCatalogProducts      string `env:"APP_ID_CATALOG_PRODUCTS" default:"VCOJEYD2PO" usage:"application id for catalog products"`
 	RedisHost                         string `env:"REDIS_HOST" default:"localhost" usage:"hots for redis"`
 	RedisPort                         string `env:"REDIS_PORT" default:"6379" usage:"port for redis"`
-	RedisBestSellerDepartmentTTL      int64  `env:"REDIS_BEST_SELLER_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
-	RedisSameBrandDepartmentTTL       int64  `env:"REDIS_SAME_BRAND_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
-	RedisProductsRelatedDepartmentTTL int64  `env:"REDIS_PRODUCTS_RELATED_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
+	RedisBestSellerDepartmentTTL      int64  `env:"REDIS_BEST_SELLER_DEPARMENT_TTL"  default:"720" usage:"TTL for best seller department cache in minutes"`
+	RedisSameBrandTTL                 int64  `env:"REDIS_SAME_BRAND_TTL"  default:"720" usage:"TTL for same brand cache in minutes"`
+	RedisProductsRelatedDepartmentTTL int64  `env:"REDIS_PRODUCTS_RELATED_DEPARMENT_TTL"  default:"720" usage:"TTL for products related department cache in minutes"`
 	DbHost                            string `env:"DB_HOST" default:"localhost" usage:"host for database"`
 	DbPort                            string `env:"DB_PORT" default:"5432" usage:"port for database"`
 	DbUser                            string `env:"DB_USER" default:"postgres" usage:"user for database"`
