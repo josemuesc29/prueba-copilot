@@ -9,10 +9,10 @@ import (
 	dtoResponse "ftd-td-catalog-item-read-services/internal/products-related/infra/api/handler/dto/response"
 	sharedModel "ftd-td-catalog-item-read-services/internal/shared/domain/model"
 	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
-	// Importar el paquete de respuesta genérica compartida
 	sharedInfraResponse "ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -21,15 +21,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// newTestContext crea un gin.Context y un httptest.Recorder para pruebas.
+func newTestContext(recorder *httptest.ResponseRecorder) *gin.Context {
+	c, _ := gin.CreateTestContext(recorder)
+	// Inicializar Request para evitar nil pointer dereference si no se setea explícitamente un request completo
+	c.Request = &http.Request{
+		Header: make(http.Header),
+		URL:    &url.URL{},
+	}
+	return c
+}
+
+
 func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-
-	setupRouter := func(h ProductsRelatedHandler) *gin.Engine {
-		router := gin.New()
-		fullPathRouter := gin.New()
-		fullPathRouter.GET("/catalog-item/r/:countryId/v1/items/item/:itemId/related", h.GetRelatedItems)
-		return fullPathRouter
-	}
 
 	t.Run("should return 200 OK with related items on valid request", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
@@ -37,7 +42,6 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 
 		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
 		handler := NewProductsRelatedHandler(mockAppService)
-		router := setupRouter(handler)
 
 		countryID := "CO"
 		itemID := "item123"
@@ -62,16 +66,24 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 			gomock.Any(), countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParams,
 		).Return(domainResponse, nil)
 
-		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item/%s/related?nearby-stores=%s&city=%s&query=%s&index-name=%s&params=%s",
-			countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParams)
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
-		req.Header.Set(string(enums.HeaderCorrelationID), "test-corr-id-handler")
-
+		// Configurar contexto Gin
 		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
+		c := newTestContext(rr)
+		c.Params = gin.Params{
+			{Key: "countryId", Value: countryID},
+			{Key: "itemId", Value: itemID},
+		}
+		// Simular query params
+		parsedURL, _ := url.Parse(fmt.Sprintf("/dummy?nearby-stores=%s&city=%s&query=%s&index-name=%s&params=%s",
+			nearbyStores, city, queryAlgolia, indexName, algoliaParams))
+		c.Request.URL = parsedURL
+		c.Request.Header.Set(string(enums.HeaderCorrelationID), "test-corr-id-handler")
+
+
+		handler.GetRelatedItems(c) // Llamar directamente al handler
 
 		assert.Equal(t, http.StatusOK, rr.Code)
-		var actualResponseDto dtoResponse.ProductsRelatedResponseDto // Usar el DTO específico del handler
+		var actualResponseDto dtoResponse.ProductsRelatedResponseDto
 		err := json.Unmarshal(rr.Body.Bytes(), &actualResponseDto)
 		assert.NoError(t, err)
 		assert.Len(t, actualResponseDto.Results, 1)
@@ -79,37 +91,45 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		assert.Equal(t, "related1", actualResponseDto.Results[0].Hits[0].ObjectID)
 	})
 
-	t.Run("should return 400 Bad Request if required itemId path param is missing/empty and binding fails", func(t *testing.T) {
+	t.Run("should return 400 Bad Request if required itemId path param is missing and binding fails", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
 		handler := NewProductsRelatedHandler(mockAppService)
 
-		// Para probar el fallo de ShouldBindUri, necesitamos un contexto donde el param no esté seteado
-		// pero la ruta sí se registre de una forma que permita el match parcial antes del binding.
-		// Esto es difícil con el router de Gin que hace un match estricto de path primero.
-		// Si la ruta es /item/:itemId/related, y se llama a /item//related, Gin da 404.
-		// Si la ruta fuera /item/*itemId/related (con wildcard), entonces el handler sería llamado
-		// y el ShouldBindUri podría fallar si itemId es vacío y tiene `binding:"required"`.
+		rr := httptest.NewRecorder()
+		c := newTestContext(rr)
+		c.Params = gin.Params{gin.Param{Key: "countryId", Value: "CO"}} // itemId falta en c.Params
+		// Request URL no es crucial aquí ya que ShouldBindUri usa c.Params
+		c.Request.URL, _ = url.Parse("/dummy")
 
-		// Simulación: Creamos el contexto y llamamos al handler directamente.
-		// Esta prueba es más unitaria para el handler, no tanto un test HTTP completo de la ruta.
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		// No establecemos c.Params para itemId, o lo establecemos vacío.
-		// Para que ShouldBindUri falle, el DTO debe tener `binding:"required"` y el param no estar.
-		// Nuestro DTO tiene `uri:"itemId" binding:"required"`.
-		c.Params = gin.Params{gin.Param{Key: "countryId", Value: "CO"}} // itemId falta
 
-		// Crear un request dummy para que el contexto no sea totalmente nil
-		req, _ := http.NewRequest(http.MethodGet, "/dummy", nil)
-		c.Request = req
+		handler.GetRelatedItems(c)
 
-		handler.GetRelatedItems(c) // Llamar directamente al método del handler
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		var errorResponse sharedInfraResponse.GenericResponse
+		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorResponse.Code)
+		assert.True(t, strings.Contains(errorResponse.Message, "Invalid path parameters"), "Error message mismatch: %s", errorResponse.Message)
+	})
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		var errorResponse sharedInfraResponse.GenericResponse // Usar la estructura correcta
-		err := json.Unmarshal(w.Body.Bytes(), &errorResponse)
+	t.Run("should return 400 Bad Request if required countryId path param is missing and binding fails", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
+		handler := NewProductsRelatedHandler(mockAppService)
+
+		rr := httptest.NewRecorder()
+		c := newTestContext(rr)
+		c.Params = gin.Params{gin.Param{Key: "itemId", Value: "item123"}} // countryId falta en c.Params
+		c.Request.URL, _ = url.Parse("/dummy")
+
+		handler.GetRelatedItems(c)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		var errorResponse sharedInfraResponse.GenericResponse
+		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorResponse.Code)
 		assert.True(t, strings.Contains(errorResponse.Message, "Invalid path parameters"), "Error message mismatch: %s", errorResponse.Message)
@@ -122,7 +142,6 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 
 		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
 		handler := NewProductsRelatedHandler(mockAppService)
-		router := setupRouter(handler)
 
 		countryID := "CO"
 		itemID := "item123"
@@ -132,10 +151,15 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 			gomock.Any(), countryID, itemID, "", "", "", "", "",
 		).Return(domainResponse, nil)
 
-		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item/%s/related", countryID, itemID)
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
 		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
+		c := newTestContext(rr)
+		c.Params = gin.Params{
+			{Key: "countryId", Value: countryID},
+			{Key: "itemId", Value: itemID},
+		}
+		c.Request.URL, _ = url.Parse("/dummy") // Sin query params
+
+		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 	})
@@ -146,7 +170,6 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 
 		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
 		handler := NewProductsRelatedHandler(mockAppService)
-		router := setupRouter(handler)
 
 		countryID := "CO"
 		itemID := "item123"
@@ -157,13 +180,19 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 			gomock.Any(), countryID, itemID, "", "", "", "", "",
 		).Return(model.AlgoliaRelatedProductsResponse{}, expectedError)
 
-		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item/%s/related", countryID, itemID)
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
 		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
+		c := newTestContext(rr)
+		c.Params = gin.Params{
+			{Key: "countryId", Value: countryID},
+			{Key: "itemId", Value: itemID},
+		}
+		c.Request.URL, _ = url.Parse("/dummy")
+
+
+		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
-		var errorResponse sharedInfraResponse.GenericResponse // Usar la estructura correcta
+		var errorResponse sharedInfraResponse.GenericResponse
 		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusText(http.StatusInternalServerError), errorResponse.Code)
