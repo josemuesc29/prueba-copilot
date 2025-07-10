@@ -106,9 +106,9 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID stri
 	// Si se requiere una llamada externa, se debe inyectar el puerto correspondiente.
 	// Ejemplo: itemsWithOffers, err := s.outPortOffer.ApplyOffers(ctx, processedItems, countryID)
 
-	// 4.2. Ordenamiento por stock (descendente)
+	// 4.2. Ordenamiento por stock (descendente) - Usar len(StoresWithStock) como proxy de cantidad de stock
 	sort.SliceStable(processedItems, func(i, j int) bool {
-		return processedItems[i].GlobalStock > processedItems[j].GlobalStock
+		return len(processedItems[i].StoresWithStock) > len(processedItems[j].StoresWithStock)
 	})
 
 	// 4.3. Limitar a maxItemsLimit
@@ -210,9 +210,10 @@ func (s *sameBrand) shouldIncludeProduct(product sharedModel.ProductInformation)
 	// stock, ofertas simples, ofertas prime, ordenamiento por stock
 
 	// 1. Stock:
-	//    - `product.HasStock` (booleano) o `product.GlobalStock > 0`
+	//    - `product.HasStock` (booleano)
+	//    - `len(product.StoresWithStock) > 0` (debe tener al menos una tienda con stock)
 	//    - `product.Status == "A"` (Activo)
-	if !product.HasStock || product.GlobalStock <= 0 || product.Status != "A" {
+	if !product.HasStock || len(product.StoresWithStock) == 0 || product.Status != "A" {
 		return false
 	}
 

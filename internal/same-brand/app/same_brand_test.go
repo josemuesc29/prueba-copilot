@@ -66,13 +66,13 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromAlgolia(t *testing.T) {
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID)).Return("", nil)
 
-	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, GlobalStock: 1}
+	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}} // Simula stock en 1 tienda
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 
 	algoliaProducts := []sharedModel.ProductInformation{
-		{ObjectID: "456", Brand: brandName, GlobalStock: 10, Status: "A", HasStock: true},
-		{ObjectID: "789", Brand: brandName, GlobalStock: 5, Status: "A", HasStock: true},
-		{ObjectID: "101", Brand: brandName, GlobalStock: 20, Status: "A", HasStock: true},
+		{ObjectID: "456", Brand: brandName, StoresWithStock: make([]int, 10), Status: "A", HasStock: true},
+		{ObjectID: "789", Brand: brandName, StoresWithStock: make([]int, 5), Status: "A", HasStock: true},
+		{ObjectID: "101", Brand: brandName, StoresWithStock: make([]int, 20), Status: "A", HasStock: true},
 	}
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), fmt.Sprintf("brand:\"%s\"", brandName), countryID).Return(algoliaProducts, nil)
 
@@ -160,7 +160,7 @@ func TestSameBrand_GetItemsBySameBrand_OriginalItemBrandEmpty(t *testing.T) {
 
 
     mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
-    originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: "", Status: "A", HasStock: true, GlobalStock: 1}
+    originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: "", Status: "A", HasStock: true, StoresWithStock: []int{1}} // Simula stock en 1 tienda
     mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 
     items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID)
@@ -188,7 +188,7 @@ func TestSameBrand_GetItemsBySameBrand_AlgoliaError(t *testing.T) {
 
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
-	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, GlobalStock: 1}
+	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}} // Simula stock en 1 tienda
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), fmt.Sprintf("brand:\"%s\"", brandName), countryID).Return(nil, errors.New("algolia down"))
 
@@ -217,7 +217,7 @@ func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
 	config.Enviroments.RedisSameBrandTTL = 10
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
-	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, GlobalStock:1}}, nil)
+	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}}}, nil)
 
 	var algoliaProducts []sharedModel.ProductInformation
 	totalProductsFromAlgolia := maxItemsLimit + 5
@@ -225,7 +225,7 @@ func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
 		algoliaProducts = append(algoliaProducts, sharedModel.ProductInformation{
 			ObjectID:    fmt.Sprintf("item%d", i),
 			Brand:       brandName,
-			GlobalStock: int64(i + 1),
+			StoresWithStock: make([]int, i+1), // Usar StoresWithStock
 			Status:      "A",
 			HasStock:    true,
 			MediaImageUrl: fmt.Sprintf("http://image.com/item%d.jpg", i),
@@ -250,7 +250,9 @@ func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
 			break
 		}
 	}
-	assert.Equal(t, int(originalProductForFirstItem.GlobalStock), items[0].TotalStock)
+	// Asegurarse que el mapper de dominio (MapProductInformationToSameBrandItem) usa len(StoresWithStock) para TotalStock
+	// y que el ProductInformation usado para la aserción también lo refleje.
+	assert.Equal(t, len(originalProductForFirstItem.StoresWithStock), items[0].TotalStock)
 
 	expectedLastItemIDInLimit := algoliaProducts[totalProductsFromAlgolia-maxItemsLimit].ObjectID
 	assert.Equal(t, expectedLastItemIDInLimit, items[maxItemsLimit-1].ID)
@@ -265,11 +267,11 @@ func TestSameBrand_ShouldIncludeProduct(t *testing.T) {
 		product  sharedModel.ProductInformation
 		expected bool
 	}{
-		{"Active with stock", sharedModel.ProductInformation{Status: "A", HasStock: true, GlobalStock: 1}, true},
-		{"Inactive with stock", sharedModel.ProductInformation{Status: "I", HasStock: true, GlobalStock: 1}, false},
-		{"Active no stock (HasStock false)", sharedModel.ProductInformation{Status: "A", HasStock: false, GlobalStock: 1}, false},
-		{"Active no stock (GlobalStock zero)", sharedModel.ProductInformation{Status: "A", HasStock: true, GlobalStock: 0}, false},
-		{"Active no stock (both zero/false)", sharedModel.ProductInformation{Status: "A", HasStock: false, GlobalStock: 0}, false},
+		{"Active with stock", sharedModel.ProductInformation{Status: "A", HasStock: true, StoresWithStock: []int{1}}, true},
+		{"Inactive with stock", sharedModel.ProductInformation{Status: "I", HasStock: true, StoresWithStock: []int{1}}, false},
+		{"Active no stock (HasStock false)", sharedModel.ProductInformation{Status: "A", HasStock: false, StoresWithStock: []int{1}}, false},
+		{"Active with stock but no stores", sharedModel.ProductInformation{Status: "A", HasStock: true, StoresWithStock: []int{}}, false},
+		{"Active no stock (HasStock false, no stores)", sharedModel.ProductInformation{Status: "A", HasStock: false, StoresWithStock: []int{}}, false},
 	}
 
 	for _, tc := range testCases {
@@ -298,10 +300,10 @@ func TestSameBrand_GetItemsBySameBrand_CacheSetError(t *testing.T) {
 
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID)).Return("", nil)
-	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, GlobalStock: 1}
+	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}}
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 	algoliaProducts := []sharedModel.ProductInformation{
-		{ObjectID: "456", Brand: brandName, GlobalStock: 10, Status: "A", HasStock: true},
+		{ObjectID: "456", Brand: brandName, StoresWithStock: make([]int, 10), Status: "A", HasStock: true},
 	}
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), fmt.Sprintf("brand:\"%s\"", brandName), countryID).Return(algoliaProducts, nil)
 
@@ -334,10 +336,10 @@ func TestSameBrand_GetItemsBySameBrand_CacheGetError(t *testing.T) {
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID)).Return("", errors.New("cache get failed"))
 
-	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, GlobalStock: 1}
+	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}}
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 	algoliaProducts := []sharedModel.ProductInformation{
-		{ObjectID: "456", Brand: brandName, GlobalStock: 10, Status: "A", HasStock: true},
+		{ObjectID: "456", Brand: brandName, StoresWithStock: make([]int, 10), Status: "A", HasStock: true},
 	}
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), fmt.Sprintf("brand:\"%s\"", brandName), countryID).Return(algoliaProducts, nil)
 
