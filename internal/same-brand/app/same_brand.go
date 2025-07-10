@@ -32,23 +32,31 @@ const (
 type sameBrand struct {
 	outPortCatalogProduct sharedOutPorts.CatalogProduct
 	outPortCache          sharedOutPorts.Cache
-	outPortOffer          sharedOutPorts.OfferOutPort
+	// outPortOffer          sharedOutPorts.OfferOutPort // Eliminado temporalmente
 }
 
 func NewSameBrand(
 	outPortCatalogProduct sharedOutPorts.CatalogProduct,
 	outPortCache sharedOutPorts.Cache,
-	outPortOffer sharedOutPorts.OfferOutPort,
+	// outPortOffer sharedOutPorts.OfferOutPort, // Eliminado temporalmente
 ) inPorts.SameBrand {
 	return &sameBrand{
 		outPortCatalogProduct: outPortCatalogProduct,
 		outPortCache:          outPortCache,
-		outPortOffer:          outPortOffer,
+		// outPortOffer:          outPortOffer, // Eliminado temporalmente
 	}
 }
 
 func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID string) ([]model.SameBrandItem, error) {
-	correlationID := utils.GetCorrelationIDFromContext(ctx)
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
 	var rs []model.SameBrandItem
 
 	// 1. Intenta obtener de la caché
@@ -129,7 +137,15 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID stri
 }
 
 func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sharedModel.ProductInformation, error) {
-	correlationID := utils.GetCorrelationIDFromContext(ctx)
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
 	// Asegurarse de que el header X-Custom-City se propaga si está presente
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
 
@@ -149,7 +165,15 @@ func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sh
 }
 
 func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID string) ([]sharedModel.ProductInformation, error) {
-	correlationID := utils.GetCorrelationIDFromContext(ctx)
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
 	// Construir la query para Algolia
 	// La query debe buscar por marca y excluir el itemID original.
 	// Algolia soporta filtros negativos, ej: "brand:MiMarca AND NOT objectID:originalItemID"
@@ -207,7 +231,15 @@ func (s *sameBrand) shouldIncludeProduct(product sharedModel.ProductInformation)
 
 func findSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	countryID, itemID string, response *[]model.SameBrandItem) error {
-	correlationID := utils.GetCorrelationIDFromContext(ctx)
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
 	cacheKey := fmt.Sprintf(keySameBrandCache, countryID, itemID)
 	cachedData, err := outPortCache.Get(ctx, cacheKey)
 
@@ -237,7 +269,15 @@ func findSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 
 func saveSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	countryID, itemID string, rs []model.SameBrandItem) error {
-	correlationID := utils.GetCorrelationIDFromContext(ctx)
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
 	if len(rs) == 0 { // No guardar en caché si no hay resultados
 		return nil
 	}
