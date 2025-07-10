@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"ftd-td-catalog-item-read-services/internal/same-brand/domain/model"
-	dto_response_samebrand "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/handler/dto/response"
+	dto_response_samebrand "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/handler/dto/response" // DTO específico para los datos de samebrand
 	mock_in_ports "ftd-td-catalog-item-read-services/test/mocks/same-brand/domain/ports/in"
 	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
-	"ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response"
+	// Ya no se importa "ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response" para la estructura genérica
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -72,11 +72,15 @@ func TestSameBrandHandler_GetItemsSameBrand_Success(t *testing.T) {
 	assert.Equal(t, correlationID, w.Header().Get(enums.HeaderCorrelationID))
 
 	// Verificar el cuerpo de la respuesta
-	var actualResponse response.Response // Usar la estructura de respuesta genérica
+	var actualResponse struct { // Definir struct local para el cuerpo de la respuesta genérica
+		Code    string `json:"code"`
+		Message string `json:"message"`
+		Data    any    `json:"data"`
+	}
 	err := json.Unmarshal(w.Body.Bytes(), &actualResponse)
 	assert.NoError(t, err)
-	assert.Equal(t, response.CodeOK, actualResponse.Code)
-	assert.Equal(t, response.MessageSuccess, actualResponse.Message)
+	assert.Equal(t, http.StatusText(http.StatusOK), actualResponse.Code) // "OK"
+	assert.Equal(t, "Success", actualResponse.Message)
 
 	// Verificar los datos dentro de la respuesta
 	dataBytes, err := json.Marshal(actualResponse.Data)
@@ -115,10 +119,14 @@ func TestSameBrandHandler_GetItemsSameBrand_AppServiceError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Equal(t, correlationID, w.Header().Get(enums.HeaderCorrelationID))
 
-	var actualResponse response.Response
+	var actualResponse struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+		Data    any    `json:"data"`
+	}
 	err := json.Unmarshal(w.Body.Bytes(), &actualResponse)
 	assert.NoError(t, err)
-	assert.Equal(t, "ERROR", actualResponse.Code) // Asumiendo que response.ServerError usa "ERROR"
+	assert.Equal(t, http.StatusText(http.StatusInternalServerError), actualResponse.Code) // "Internal Server Error"
 	assert.Equal(t, expectedError.Error(), actualResponse.Message)
 }
 
@@ -176,13 +184,18 @@ func TestSameBrandHandler_GetItemsSameBrand_BindingError_MissingItemID(t *testin
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Equal(t, correlationID, w.Header().Get(enums.HeaderCorrelationID))
 
-	var actualResponse response.Response
+	var actualResponse struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+		Data    any    `json:"data"`
+	}
 	err := json.Unmarshal(w.Body.Bytes(), &actualResponse)
 	assert.NoError(t, err)
 	// El mensaje de error exacto puede variar según la implementación de Gin/validator.
 	// Debería indicar que 'itemId' es requerido o no pudo ser bindeado.
+	// La función BadRequest usa el error.Error() como mensaje.
 	assert.True(t, strings.Contains(actualResponse.Message, "itemId"), "El mensaje de error debería mencionar itemId")
-	assert.Equal(t, response.CodeBadRequestError, actualResponse.Code) // Asumiendo que response.BadRequest usa este código
+	assert.Equal(t, http.StatusText(http.StatusBadRequest), actualResponse.Code) // "Bad Request"
 }
 
 // Los DTOs de request no tienen headers requeridos, por lo que un test específico para
