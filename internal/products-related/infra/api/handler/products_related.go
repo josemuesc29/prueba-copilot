@@ -5,10 +5,11 @@ package handler
 
 import (
 	"fmt"
-	// Import for the new port (will be created in a later step)
 	productsRelatedPortsIn "ftd-td-catalog-item-read-services/internal/products-related/domain/ports/in"
+	"ftd-td-catalog-item-read-services/internal/products-related/infra/api/handler/dto/request"
+	"ftd-td-catalog-item-read-services/internal/products-related/infra/api/handler/mappers"
 	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
-	"ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response" // Reusing generic responses
+	sharedResponse "ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response" // Renamed to avoid conflict
 	"ftd-td-catalog-item-read-services/internal/shared/utils"
 	"net/http"
 
@@ -19,13 +20,7 @@ import (
 const (
 	getRelatedItemsHandlerLog = "ProductsRelatedHandler.GetRelatedItems"
 	serviceProductsRelated    = "service ProductsRelated"
-	countryIDParam            = "countryId"
-	itemIDParam               = "itemId"
-	queryParamNearbyStores    = "nearby-stores"
-	queryParamCity            = "city"
-	queryParamQuery           = "query"        // Query for Algolia
-	queryParamIndexName       = "index-name"   // Optional index name for Algolia
-	queryParamAlgoliaParams   = "params"       // Other Algolia specific parameters
+	// Constantes para nombres de parámetros ya no son necesarias aquí si usamos DTO con tags
 )
 
 type productsRelatedHandler struct {
@@ -47,43 +42,43 @@ func (h *productsRelatedHandler) GetRelatedItems(c *gin.Context) {
 
 	log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, "Processing request")
 
-	countryID := c.Param(countryIDParam)
-	itemID := c.Param(itemIDParam)
+	var reqDto request.ProductsRelatedRequestDto
 
-	if countryID == "" {
-		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, "countryId is required")
-		response.BadRequest(c, "countryId is required in path")
-		return
-	}
-	if itemID == "" {
-		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, "itemId is required")
-		response.BadRequest(c, "itemId is required in path")
+	// Bind URI parameters (countryId, itemId)
+	if err := c.ShouldBindUri(&reqDto); err != nil {
+		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, fmt.Sprintf("Error binding URI parameters: %v", err))
+		sharedResponse.BadRequest(c, fmt.Sprintf("Invalid path parameters: %s", err.Error()))
 		return
 	}
 
-	// Extract query parameters
-	nearbyStores := c.Query(queryParamNearbyStores)
-	city := c.Query(queryParamCity)
-	queryAlgolia := c.Query(queryParamQuery)
-	indexName := c.Query(queryParamIndexName)
-	algoliaParams := c.Query(queryParamAlgoliaParams)
-
-	// The 'query' parameter (queryAlgolia here) is crucial for Algolia search.
-	// It might be optional if algoliaParams contains a full query definition or if related items are fetched differently.
-	// For now, we'll assume it can be empty and the service layer will handle it.
+	// Bind query parameters
+	if err := c.ShouldBindQuery(&reqDto); err != nil {
+		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, fmt.Sprintf("Error binding query parameters: %v", err))
+		sharedResponse.BadRequest(c, fmt.Sprintf("Invalid query parameters: %s", err.Error()))
+		return
+	}
 
 	log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog,
-		fmt.Sprintf("Calling application service with countryID: %s, itemID: %s, nearbyStores: %s, city: %s, query: %s, indexName: %s, params: %s",
-			countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParams))
+		fmt.Sprintf("Calling application service with DTO: %+v", reqDto))
 
-	data, err := h.portProductsRelated.GetRelatedItems(c, countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParams)
+	domainResponse, err := h.portProductsRelated.GetRelatedItems(
+		c,
+		reqDto.CountryID,
+		reqDto.ItemID,
+		reqDto.NearbyStores,
+		reqDto.City,
+		reqDto.QueryAlgolia,
+		reqDto.IndexName,
+		reqDto.AlgoliaParams,
+	)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, fmt.Sprintf("Error from service: %v", err))
-		// Consider different error types, e.g., NotFound vs ServerError
-		response.ServerError(c, err.Error()) // Assuming generic server error for now
+		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, fmt.Sprintf("Error from application service: %v", err))
+		sharedResponse.ServerError(c, err.Error()) // Assuming generic server error
 		return
 	}
 
-	log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, "Successfully retrieved related items from service")
-	c.JSON(http.StatusOK, data) // Send the data from the service directly
+	responseDto := mappers.ToResponseDto(domainResponse)
+
+	log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, "Successfully retrieved and mapped related items")
+	c.JSON(http.StatusOK, responseDto)
 }
