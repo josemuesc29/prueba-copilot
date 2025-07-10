@@ -9,7 +9,7 @@ import (
 	dtoResponse "ftd-td-catalog-item-read-services/internal/products-related/infra/api/handler/dto/response"
 	sharedModel "ftd-td-catalog-item-read-services/internal/shared/domain/model"
 	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
-	sharedInfraResponse "ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response"
+	_ "ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response" // Import for side effects or if types are used indirectly
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -107,11 +107,11 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		var errorResponse sharedInfraResponse.genericResponse // <--- CORRECCIÓN AQUÍ
-		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
+		var errorContent map[string]interface{} // <--- CORRECCIÓN AQUÍ
+		err := json.Unmarshal(rr.Body.Bytes(), &errorContent)
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorResponse.Code)
-		assert.True(t, strings.Contains(errorResponse.Message, "Invalid path parameters"), "Error message mismatch: %s", errorResponse.Message)
+		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorContent["code"])
+		assert.True(t, strings.Contains(errorContent["message"].(string), "Invalid path parameters"), "Error message mismatch: %s", errorContent["message"])
 	})
 
 	t.Run("should return 400 Bad Request if required countryId path param is missing and binding fails", func(t *testing.T) {
@@ -128,11 +128,11 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		var errorResponse sharedInfraResponse.genericResponse // <--- CORRECCIÓN AQUÍ
-		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
+		var errorContent map[string]interface{} // <--- CORRECCIÓN AQUÍ
+		err := json.Unmarshal(rr.Body.Bytes(), &errorContent)
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorResponse.Code)
-		assert.True(t, strings.Contains(errorResponse.Message, "Invalid path parameters"), "Error message mismatch: %s", errorResponse.Message)
+		assert.Equal(t, http.StatusText(http.StatusBadRequest), errorContent["code"])
+		assert.True(t, strings.Contains(errorContent["message"].(string), "Invalid path parameters"), "Error message mismatch: %s", errorContent["message"])
 	})
 
 
@@ -192,10 +192,10 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		handler.GetRelatedItems(c)
 
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
-		var errorResponse sharedInfraResponse.genericResponse // <--- CORRECCIÓN AQUÍ
-		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
+		var errorContent map[string]interface{} // <--- CORRECCIÓN AQUÍ
+		err := json.Unmarshal(rr.Body.Bytes(), &errorContent)
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusText(http.StatusInternalServerError), errorResponse.Code)
-		assert.Equal(t, expectedErrorMessage, errorResponse.Message)
+		assert.Equal(t, http.StatusText(http.StatusInternalServerError), errorContent["code"])
+		assert.Equal(t, expectedErrorMessage, errorContent["message"])
 	})
 }
