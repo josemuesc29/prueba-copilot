@@ -8,5 +8,13 @@ import (
 )
 
 type ProductsRelated interface {
-	GetRelatedProducts(c *gin.Context, countryID, itemID string) ([]model.RelatedProduct, error)
+	GetRelatedItems(
+		ctx *gin.Context,
+		countryID, itemID string,
+		nearbyStores string,
+		city string,
+		queryAlgolia string, // Query for Algolia
+		indexName string, // Optional index name
+		algoliaParamsStr string, // Other Algolia specific parameters as a string
+	) (model.AlgoliaRelatedProductsResponse, error)
 }

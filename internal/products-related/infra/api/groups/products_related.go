@@ -1,32 +1,31 @@
 package groups
 
-//go:generate mockgen -source=same_brand.go -destination=../../../../../test/mocks/same-brand/infra/api/groups/same_brand_mock.go
+//go:generate mockgen -source=products_related.go -destination=../../../../../test/mocks/products-related/infra/api/groups/products_related_mock.go
 
 import (
-	"ftd-td-catalog-item-read-services/internal/same-brand/infra/api/handler"
+	productsRelatedHandler "ftd-td-catalog-item-read-services/internal/products-related/infra/api/handler"
 	"ftd-td-catalog-item-read-services/internal/shared/middleware"
-
 	"github.com/gin-gonic/gin"
 )
 
-const sameBrandPath = "/same-brand"
+const productsRelatedPath = "products-related"
 
-type sameBrand struct {
-	sameBrandH handler.SameBrand
+type productsRelatedGroup struct {
+	handler productsRelatedHandler.ProductsRelatedHandler
 }
 
-type SameBrand interface {
+type ProductsRelatedGroup interface {
 	Source(rg *gin.RouterGroup)
 }
 
-func NewSameBrand(sameBrandH handler.SameBrand) SameBrand {
-	return &sameBrand{
-		sameBrandH: sameBrandH,
+func NewProductsRelatedGroup(h productsRelatedHandler.ProductsRelatedHandler) ProductsRelatedGroup { // Updated constructor and param type
+	return &productsRelatedGroup{
+		handler: h,
 	}
 }
 
-func (g sameBrand) Source(rg *gin.RouterGroup) {
-	group := rg.Group(sameBrandPath)
+func (g *productsRelatedGroup) Source(rg *gin.RouterGroup) {
 
-	group.GET("/:countryId/v2/item/:itemId", g.sameBrandH.GetItemsSameBrand, middleware.ValidateCountryID())
+	group := rg.Group(productsRelatedPath)
+	group.GET("/:countryId/v2/item/:itemId", g.handler.GetRelatedItems, middleware.ValidateCountryID())
 }

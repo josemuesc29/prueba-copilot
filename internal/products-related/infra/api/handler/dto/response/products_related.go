@@ -1,99 +1,114 @@
 package response
 
-type SellerAddress struct {
-	DaneCode string `json:"daneCode"`
-	Address  string `json:"address"`
+import (
+	"ftd-td-catalog-item-read-services/internal/shared/domain/model"
+)
+
+// ProductsRelatedResponseDto define la estructura de respuesta para el endpoint de productos relacionados.
+// Se basa directamente en la estructura AlgoliaRelatedProductsResponse del dominio,
+// ya que la HU pide replicar la respuesta de Algolia.
+// Si la API necesitara una forma diferente en el futuro, esta DTO se modificaría.
+type ProductsRelatedResponseDto struct {
+	Results []AlgoliaResultDto `json:"results"`
 }
 
-type Dimensions struct {
-	Weight string `json:"weight"`
-	Height string `json:"height"`
-	Width  string `json:"width"`
-	Length string `json:"length"`
+type AlgoliaResultDto struct {
+	AppliedRules               interface{}                `json:"appliedRules"`
+	AppliedRelevancyStrictness int                        `json:"appliedRelevancyStrictness"`
+	AroundLatLng               string                     `json:"aroundLatLng"`
+	AutomaticRadius            string                     `json:"automaticRadius"`
+	ExhaustiveFacetsCount      bool                       `json:"exhaustiveFacetsCount"`
+	ExhaustiveNbHits           bool                       `json:"exhaustiveNbHits"`
+	Explain                    interface{}                `json:"explain"`
+	Extensions                 ExtensionsDto              `json:"extensions"`
+	Facets                     map[string]map[string]int  `json:"facets"`
+	FacetsStats                map[string]FacetStatDto    `json:"facets_stats"`
+	Hits                       []model.ProductInformation `json:"hits"`
+	HitsPerPage                int                        `json:"hitsPerPage"`
+	Index                      string                     `json:"index"`
+	IndexUsed                  string                     `json:"indexUsed"`
+	Length                     int                        `json:"length"`
+	Message                    string                     `json:"message"`
+	NbHits                     int                        `json:"nbHits"`
+	NbPages                    int                        `json:"nbPages"`
+	NbSortedHits               int                        `json:"nbSortedHits"`
+	Offset                     int                        `json:"offset"`
+	Page                       int                        `json:"page"`
+	Params                     string                     `json:"params"`
+	ParsedQuery                string                     `json:"parsedQuery"`
+	ProcessingTimeMS           int                        `json:"processingTimeMS"`
+	Query                      string                     `json:"query"`
+	QueryAfterRemoval          string                     `json:"queryAfterRemoval"`
+	QueryID                    string                     `json:"queryID"`
+	ServerUsed                 string                     `json:"serverUsed"`
+	TimeoutCounts              bool                       `json:"timeoutCounts"`
+	TimeoutHits                bool                       `json:"timeoutHits"`
+	UserData                   interface{}                `json:"userData"`
+	ABTestVariantID            int                        `json:"abTestVariantID"`
+	ABTestID                   int                        `json:"abTestID"`
+	RenderingContent           map[string]interface{}     `json:"renderingContent"`
 }
 
-type SEOOffer struct {
-	PriceCurrency   string `json:"priceCurrency"`
-	Price           string `json:"price"`
-	LowPrice        string `json:"lowPrice"`
-	PriceValidUntil string `json:"priceValidUntil"`
-	ItemCondition   string `json:"itemCondition"`
-	Availability    string `json:"availability"`
-	Seller          struct {
-		Name string `json:"name"`
-		Type string `json:"@type"`
-	} `json:"seller"`
-	HighPrice string `json:"highPrice"`
-	Type      string `json:"@type"`
+type ExtensionsDto struct {
+	QueryCategorization map[string]interface{} `json:"queryCategorization"`
 }
 
-type SEO struct {
-	Name        string   `json:"name"`
-	Image       string   `json:"image"`
-	Description string   `json:"description"`
-	SKU         string   `json:"sku"`
-	Offers      SEOOffer `json:"offers"`
-	Context     string   `json:"@context"`
-	Type        string   `json:"@type"`
+type FacetStatDto struct {
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
+	Avg float64 `json:"avg"`
+	Sum float64 `json:"sum"`
 }
 
-type Item struct {
-	AnywaySelling              bool            `json:"anywaySelling"`
-	Brand                      string          `json:"brand"`
-	OfferText                  string          `json:"offerText"`
-	OfferDescription           string          `json:"offerDescription"`
-	FullPrice                  float64         `json:"fullPrice"`
-	GrayDescription            string          `json:"grayDescription"`
-	Highlight                  bool            `json:"highlight"`
-	ID                         string          `json:"id"`
-	IsGeneric                  bool            `json:"isGeneric"`
-	MediaDescription           string          `json:"mediaDescription"`
-	LargeDescription           string          `json:"largeDescription"`
-	MediaImageURL              string          `json:"mediaImageUrl"`
-	OfferPrice                 float64         `json:"offerPrice"`
-	Outstanding                bool            `json:"outstanding"`
-	RequirePrescription        string          `json:"requirePrescription"`
-	Sales                      string          `json:"sales"`
-	Spaces                     string          `json:"spaces"`
-	Status                     string          `json:"status"`
-	TaxRate                    float64         `json:"taxRate"`
-	TotalStock                 int             `json:"totalStock"`
-	QuantitySold               int             `json:"quantitySold"`
-	IDClassification           int             `json:"idClassification"`
-	ExpressWithSubscription    bool            `json:"expressWithSubscription"`
-	PosGroup                   string          `json:"posGroup"`
-	ListURLImages              []string        `json:"listUrlImages"`
-	Categorie                  string          `json:"categorie"`
-	Marca                      string          `json:"marca"`
-	Departments                []string        `json:"departments"`
-	SubCategory                string          `json:"subCategory"`
-	Supplier                   string          `json:"supplier"`
-	DeliveryPrice              float64         `json:"deliveryPrice"`
-	SEO                        SEO             `json:"seo"`
-	TextSEO                    string          `json:"textSEO"`
-	OnlyOnline                 bool            `json:"onlyOnline"`
-	DeliveryTime               string          `json:"deliveryTime"`
-	GlobalStock                int             `json:"globalStock"`
-	OutOfStore                 bool            `json:"outofstore"`
-	IsFlashOffer               bool            `json:"isFlashOffer"`
-	OfferStartDate             string          `json:"offerStartDate"`
-	OfferEndDate               string          `json:"offerEndDate"`
-	PrimePrice                 float64         `json:"primePrice"`
-	PrimeTextDiscount          string          `json:"primeTextDiscount"`
-	PrimeDescription           string          `json:"primeDescription"`
-	RMSClass                   string          `json:"rms_class"`
-	RMSDepartment              string          `json:"rms_deparment"`
-	RMSGroup                   string          `json:"rms_group"`
-	RMSSubclass                string          `json:"rms_subclass"`
-	WithoutStock               bool            `json:"without_stock"`
-	URL                        string          `json:"url"`
-	RequirePrescriptionMedical bool            `json:"requirePrescriptionMedical"`
-	SellerAddresses            []SellerAddress `json:"sellerAddresses"`
-	Dimensions                 Dimensions      `json:"dimensions"`
-	UUIDItem                   string          `json:"uuidItem"`
-	Warranty                   string          `json:"warranty"`
-	WarrantyTerms              string          `json:"warrantyTerms"`
-	CustomLabelForStockZero    string          `json:"customLabelForStockZero"`
-	StoresWithStock            []string        `json:"storesWithStock"`
-	Generic                    bool            `json:"generic"`
-}
+// Helper para convertir desde el modelo de dominio al DTO de respuesta.
+// Esto se moverá a un archivo mapper en el siguiente paso.
+// func FromDomainToResponseDto(domainResp domainModel.AlgoliaRelatedProductsResponse) ProductsRelatedResponseDto {
+// 	dtoResults := make([]AlgoliaResultDto, len(domainResp.Results))
+// 	for i, domainResult := range domainResp.Results {
+// 		dtoHits := make([]domainModel.ProductInformation, len(domainResult.Hits))
+// 		copy(dtoHits, domainResult.Hits) // ProductInformation es compartido
+
+// 		dtoFacetsStats := make(map[string]FacetStatDto)
+// 		for k, v := range domainResult.FacetsStats {
+// 			dtoFacetsStats[k] = FacetStatDto(v)
+// 		}
+
+// 		dtoResults[i] = AlgoliaResultDto{
+// 			AppliedRules:             domainResult.AppliedRules,
+// 			AppliedRelevancyStrictness: domainResult.AppliedRelevancyStrictness,
+// 			AroundLatLng:             domainResult.AroundLatLng,
+// 			AutomaticRadius:          domainResult.AutomaticRadius,
+// 			ExhaustiveFacetsCount:    domainResult.ExhaustiveFacetsCount,
+// 			ExhaustiveNbHits:         domainResult.ExhaustiveNbHits,
+// 			Explain:                  domainResult.Explain,
+// 			Extensions:               ExtensionsDto(domainResult.Extensions),
+// 			Facets:                   domainResult.Facets, // map[string]map[string]int es compartido
+// 			FacetsStats:              dtoFacetsStats,
+// 			Hits:                     dtoHits,
+// 			HitsPerPage:              domainResult.HitsPerPage,
+// 			Index:                    domainResult.Index,
+// 			IndexUsed:                domainResult.IndexUsed,
+// 			Length:                   domainResult.Length,
+// 			Message:                  domainResult.Message,
+// 			NbHits:                   domainResult.NbHits,
+// 			NbPages:                  domainResult.NbPages,
+// 			NbSortedHits:             domainResult.NbSortedHits,
+// 			Offset:                   domainResult.Offset,
+// 			Page:                     domainResult.Page,
+// 			Params:                   domainResult.Params,
+// 			ParsedQuery:              domainResult.ParsedQuery,
+// 			ProcessingTimeMS:         domainResult.ProcessingTimeMS,
+// 			Query:                    domainResult.Query,
+// 			QueryAfterRemoval:        domainResult.QueryAfterRemoval,
+// 			QueryID:                  domainResult.QueryID,
+// 			ServerUsed:               domainResult.ServerUsed,
+// 			TimeoutCounts:            domainResult.TimeoutCounts,
+// 			TimeoutHits:              domainResult.TimeoutHits,
+// 			UserData:                 domainResult.UserData,
+// 			ABTestVariantID:          domainResult.ABTestVariantID,
+// 			ABTestID:                 domainResult.ABTestID,
+// 			RenderingContent:         domainResult.RenderingContent,
+// 		}
+// 	}
+// 	return ProductsRelatedResponseDto{Results: dtoResults}
+// }
