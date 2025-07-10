@@ -8,9 +8,11 @@ import (
 	bestSellerHanlder "ftd-td-catalog-item-read-services/internal/best-seller/infra/api/handler"
 	healthGroup "ftd-td-catalog-item-read-services/internal/health/infra/api/groups"
 	healthHanlder "ftd-td-catalog-item-read-services/internal/health/infra/api/handler"
-	sameBrandService "ftd-td-catalog-item-read-services/internal/same-brand/app"
-	sameBrandGroup "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/groups"
-	sameBrandHandler "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/handler"
+	// Products Related (replaces SameBrand)
+	productsRelatedService "ftd-td-catalog-item-read-services/internal/products-related/app"
+	productsRelatedGroup "ftd-td-catalog-item-read-services/internal/products-related/infra/api/groups"
+	productsRelatedHandler "ftd-td-catalog-item-read-services/internal/products-related/infra/api/handler"
+
 	cacheClient "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/cache/client"
 	sharedCacheRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/cache/repository"
 	configDatabase "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/database/config"
@@ -27,12 +29,12 @@ func BuildContainer() *dig.Container {
 		// Handlers
 		healthHanlder.NewHealth,
 		bestSellerHanlder.NewBestSeller,
-		sameBrandHandler.NewSameBrand,
+		productsRelatedHandler.NewProductsRelatedHandler, // Replaced NewSameBrand
 
 		// Groups
 		healthGroup.NewHealthGroup,
 		bestSellerGroup.NewBestSeller,
-		sameBrandGroup.NewSameBrand,
+		productsRelatedGroup.NewProductsRelatedGroup, // Replaced NewSameBrand
 
 		// Database
 		configDatabase.NewPostgresConnection,
@@ -46,7 +48,7 @@ func BuildContainer() *dig.Container {
 
 		// Services
 		bestSellerService.NewBestSeller,
-		sameBrandService.NewSameBrand,
+		productsRelatedService.NewProductsRelated, // Replaced NewSameBrand
 
 		// Router
 		router.NewRouter,
