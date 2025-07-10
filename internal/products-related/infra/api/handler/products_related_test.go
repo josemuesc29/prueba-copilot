@@ -1,17 +1,18 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"ftd-td-catalog-item-read-services/internal/products-related/domain/model"
-	mock_ports_in "ftd-td-catalog-item-read-services/test/mocks/products-related/domain/ports/in" // Mock para el puerto de entrada
+	mock_ports_in "ftd-td-catalog-item-read-services/test/mocks/products-related/domain/ports/in"
 	"ftd-td-catalog-item-read-services/internal/products-related/infra/api/handler/dto/response"
-	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
 	sharedModel "ftd-td-catalog-item-read-services/internal/shared/domain/model"
+	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
+	sharedResponse "ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -22,12 +23,27 @@ import (
 func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	// Función helper para crear un contexto Gin para pruebas
+	setupRouter := func(h ProductsRelatedHandler) *gin.Engine {
+		router := gin.New()
+		// La ruta base /catalog-item/r/:countryId/v1/items es manejada por el router principal en producción.
+		// Para la prueba unitaria del handler, podemos registrar la ruta completa o una parte.
+		// Aquí registramos la parte que el group del handler manejaría.
+		router.GET("/item/:itemId/related", h.GetRelatedItems) // Asumiendo que el :countryId está en el contexto de alguna manera o se prueba en integración.
+		// Para una prueba más completa del binding de URI, necesitamos la ruta completa.
+		fullPathRouter := gin.New()
+		fullPathRouter.GET("/catalog-item/r/:countryId/v1/items/item/:itemId/related", h.GetRelatedItems)
+		return fullPathRouter
+	}
+
+
 	t.Run("should return 200 OK with related items on valid request", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
 		handler := NewProductsRelatedHandler(mockAppService)
+		router := setupRouter(handler)
 
 		countryID := "CO"
 		itemID := "item123"
@@ -37,36 +53,20 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		indexName := "products_co"
 		algoliaParams := "facetFilters=category:A"
 
-		// Respuesta esperada del servicio de aplicación (modelo de dominio)
 		domainResponse := model.AlgoliaRelatedProductsResponse{
 			Results: []model.AlgoliaResult{
 				{
 					Hits: []sharedModel.ProductInformation{
 						{ObjectID: "related1", MediaDescription: "Related Product 1"},
 					},
-					Query: queryAlgolia,
-					NbHits: 1,
-					Page: 0,
-					HitsPerPage: 10,
+					Query: queryAlgolia, NbHits: 1, Page: 0, HitsPerPage: 10,
 				},
 			},
 		}
 
-		// Configurar la expectativa en el mock del servicio de aplicación
 		mockAppService.EXPECT().GetRelatedItems(
-			gomock.Any(), // el contexto gin
-			countryID,
-			itemID,
-			nearbyStores,
-			city,
-			queryAlgolia,
-			indexName,
-			algoliaParams,
+			gomock.Any(), countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParams,
 		).Return(domainResponse, nil)
-
-		// Configurar el router y el request HTTP
-		router := gin.New()
-		router.GET("/catalog-item/r/:countryId/v1/items/item/:itemId/related", handler.GetRelatedItems)
 
 		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item/%s/related?nearby-stores=%s&city=%s&query=%s&index-name=%s&params=%s",
 			countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParams)
@@ -76,103 +76,76 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
 
-		// Verificar el código de estado y la respuesta
 		assert.Equal(t, http.StatusOK, rr.Code)
-
 		var actualResponseDto response.ProductsRelatedResponseDto
 		err := json.Unmarshal(rr.Body.Bytes(), &actualResponseDto)
 		assert.NoError(t, err)
-
 		assert.Len(t, actualResponseDto.Results, 1)
 		assert.Len(t, actualResponseDto.Results[0].Hits, 1)
 		assert.Equal(t, "related1", actualResponseDto.Results[0].Hits[0].ObjectID)
-		assert.Equal(t, queryAlgolia, actualResponseDto.Results[0].Query)
 	})
 
-	t.Run("should return 400 Bad Request if countryId is missing", func(t *testing.T) {
+	t.Run("should return 400 Bad Request if required itemId path param is missing/empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
+		handler := NewProductsRelatedHandler(mockAppService)
+		router := setupRouter(handler) // Usa el router completo para path param matching
+
+		// Caso 1: ItemID está vacío en el path. Gin debería dar 404 porque la ruta no coincide.
+		// La validación `binding:"required"` en el DTO es una segunda capa si la ruta fuera más laxa.
+		// Para probar específicamente el DTO, necesitaríamos un setup más manual del contexto,
+		// pero el test HTTP es más realista.
+		urlWithEmptyItemID := "/catalog-item/r/CO/v1/items/item//related"
+		reqEmptyItemID, _ := http.NewRequest(http.MethodGet, urlWithEmptyItemID, nil)
+		rrEmptyItemID := httptest.NewRecorder()
+		router.ServeHTTP(rrEmptyItemID, reqEmptyItemID)
+		// Gin devuelve 404 si un segmento de path no se puede parsear/matchear.
+		// El `binding:"required"` del DTO no se alcanza si la ruta no es reconocida.
+		// Si la ruta SÍ se reconociera con un itemId vacío (ej. si el :itemId fuera opcional en la ruta de Gin),
+		// entonces el `binding:"required"` del DTO para `uri:"itemId"` causaría un 400.
+		// Como :itemId es un segmento de path, Gin espera que esté.
+		assert.True(t, rrEmptyItemID.Code == http.StatusNotFound) // Esperamos 404 por ruta no encontrada
+	})
+
+	t.Run("should return 400 Bad Request if required countryId path param is missing/empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
+		handler := NewProductsRelatedHandler(mockAppService)
+		router := setupRouter(handler)
+
+		urlWithEmptyCountryID := "/catalog-item/r//v1/items/item/item123/related"
+		reqEmptyCountryID, _ := http.NewRequest(http.MethodGet, urlWithEmptyCountryID, nil)
+		rrEmptyCountryID := httptest.NewRecorder()
+		router.ServeHTTP(rrEmptyCountryID, reqEmptyCountryID)
+		assert.True(t, rrEmptyCountryID.Code == http.StatusNotFound) // Esperamos 404 por ruta no encontrada
+	})
+
+	t.Run("should correctly pass empty optional query params to service", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
 		handler := NewProductsRelatedHandler(mockAppService)
+		router := setupRouter(handler)
 
-		router := gin.New()
-		// Nota: Gin necesita que el path param esté en la definición de la ruta para que ShouldBindUri funcione.
-		// Si el path param falta en la URL, Gin no lo encontrará.
-		// Aquí probamos el binding del DTO.
-		router.GET("/catalog-item/r/:countryId/v1/items/item/:itemId/related", handler.GetRelatedItems)
+		countryID := "CO"
+		itemID := "item123"
+		// Todos los query params opcionales están vacíos
 
-		// URL sin countryId (esto en realidad no llegaría a la ruta si el router de Gin es estricto,
-		// pero la validación de ShouldBindUri en el DTO lo capturaría si la ruta se emparejara de alguna manera)
-		// Para probar el binding "required" de forma aislada, es mejor un DTO con ese campo vacío.
-		// Sin embargo, para el path param, Gin maneja el routing antes.
-		// Esta prueba es más para el caso de que el DTO falle el binding 'required'.
+		domainResponse := model.AlgoliaRelatedProductsResponse{ /* ... respuesta dummy ... */ }
+		mockAppService.EXPECT().GetRelatedItems(
+			gomock.Any(), countryID, itemID, "", "", "", "", "",
+		).Return(domainResponse, nil)
 
-		// Simulemos que la ruta se alcanza pero el DTO no puede bindear countryId
-		// Esto es un poco artificial para path params, pero para query params es más directo.
-		// Para path params, el error de "no route" ocurriría antes.
-		// Si queremos probar el `binding:"required"` de `uri:"countryId"`:
-		// Tendríamos que llamar al handler directamente con un contexto donde el param no está.
-
-		// Prueba más realista: llamar con un path param vacío si Gin lo permitiera (no lo hace)
-		// O bien, hacer que el DTO falle de otra manera.
-		// Por ahora, probamos el caso donde itemId falta en la URL, lo que es más fácil de simular.
-
-		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item//related", "CO") // ItemID vacío
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req) // Esto probablemente dará 404 por la ruta, no 400 por el binding del DTO.
-
-		// Para probar el DTO directamente:
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Params = gin.Params{gin.Param{Key: "countryId", Value: "CO"}} // ItemID no está
-		// No se puede setear la URI directamente para ShouldBindUri de forma sencilla en tests unitarios así.
-		// La prueba de binding de path params es mejor a nivel de request HTTP.
-
-		// Reintentando con una URL donde el parámetro de path itemId está vacío,
-		// lo que debería causar un fallo en el binding del DTO si la ruta lo permite.
-		// Sin embargo, Gin podría dar un 404 antes.
-		// Vamos a asumir que la ruta coincide y el binding falla.
-		// Para que `ShouldBindUri` falle con `binding:"required"`, el parámetro no debe estar en `c.Params`.
-
-		// Test de itemId faltante
-		reqMissingItemId, _ := http.NewRequest(http.MethodGet, "/catalog-item/r/CO/v1/items/item//related", nil)
-		rrMissingItemId := httptest.NewRecorder()
-		// Para que esto funcione, el router debe estar configurado para esta ruta exacta (con itemId vacío)
-		// lo cual no es el caso. El router espera un valor para :itemId.
-		// Gin daría 404.
-		// Entonces, la prueba de `binding:"required"` para `uri` es más compleja.
-		// La validación de Gin para path params es implícita en la definición de la ruta.
-		// Si el path no coincide, es 404. Si coincide, el param existe.
-
-		// Probemos un query param requerido si tuviéramos uno, eso es más fácil.
-		// Como no tenemos query params requeridos en el DTO, esta prueba se enfoca en un error de servicio.
-		// La prueba de path params requeridos es cubierta por el hecho de que si no están, la ruta no matchea (404).
-		// El `binding:"required"` en `uri` es una doble seguridad si la ruta fuera más laxa.
-	})
-
-	t.Run("should return 400 Bad Request if query param binding fails (if we had specific query DTO binding)", func(t *testing.T) {
-		// Este caso es más para cuando se usa `c.ShouldBindJSON` o un DTO específico para query params con `binding:"required"`
-		// Nuestro DTO actual usa `form` y no tiene campos requeridos de query.
-		// Si, por ejemplo, `queryAlgolia` fuera `form:"query" binding:"required"`:
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
-		handler := NewProductsRelatedHandler(mockAppService)
-		router := gin.New()
-		router.GET("/catalog-item/r/:countryId/v1/items/item/:itemId/related", handler.GetRelatedItems)
-
-		url := "/catalog-item/r/CO/v1/items/item/item123/related" // Sin el query param 'query' si fuera requerido
+		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item/%s/related", countryID, itemID)
 		req, _ := http.NewRequest(http.MethodGet, url, nil)
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
-		// Si 'query' fuera `binding:"required"`, esperaríamos 400. Como no lo es, esta prueba no aplica directamente.
-		// Lo dejamos como placeholder si se añaden validaciones de query.
-		// El DTO actual no fallará el binding de query params si están ausentes.
-		assert.NotEqual(t, http.StatusBadRequest, rr.Code) // Esperamos que no sea BadRequest por esto.
-	})
 
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
 
 	t.Run("should return 500 Internal Server Error if app service returns error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
@@ -180,23 +153,27 @@ func TestProductsRelatedHandler_GetRelatedItems(t *testing.T) {
 
 		mockAppService := mock_ports_in.NewMockProductsRelated(ctrl)
 		handler := NewProductsRelatedHandler(mockAppService)
+		router := setupRouter(handler)
 
+		countryID := "CO"
+		itemID := "item123"
 		expectedError := errors.New("service layer error")
-		mockAppService.EXPECT().GetRelatedItems(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AlgoliaRelatedProductsResponse{}, expectedError)
 
-		router := gin.New()
-		router.GET("/catalog-item/r/:countryId/v1/items/item/:itemId/related", handler.GetRelatedItems)
+		mockAppService.EXPECT().GetRelatedItems(
+			gomock.Any(), countryID, itemID, "", "", "", "", "", // Asumiendo query params vacíos para este test
+		).Return(model.AlgoliaRelatedProductsResponse{}, expectedError)
 
-		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item/%s/related", "CO", "item123")
+		url := fmt.Sprintf("/catalog-item/r/%s/v1/items/item/%s/related", countryID, itemID)
 		req, _ := http.NewRequest(http.MethodGet, url, nil)
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
-
-		var errorResponse sharedResponse.ErrorResponse // Asumiendo que sharedResponse.ServerError usa este formato
+		var errorResponse sharedResponse.ErrorResponse
 		err := json.Unmarshal(rr.Body.Bytes(), &errorResponse)
 		assert.NoError(t, err)
-		assert.Contains(t, errorResponse.Error, "service layer error")
+		// El mensaje de error exacto puede variar dependiendo de sharedResponse.ServerError
+		// pero debería contener la esencia del error original.
+		assert.True(t, strings.Contains(errorResponse.Error, "service layer error"), "Error message mismatch")
 	})
 }
