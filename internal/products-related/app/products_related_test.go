@@ -45,14 +45,32 @@ func TestProductsRelated_GetRelatedItems(t *testing.T) {
 		countryID := "CO"
 		itemID := "item123"
 		queryAlgolia := "test"
-		algoliaParamsStr := "hitsPerPage=24" // hitsPerPage ahora viene del cliente
+		algoliaParamsStr := "hitsPerPage=24"
 
 		paramsHash := calculateParamsHash("", "", queryAlgolia, "", algoliaParamsStr)
 		expectedCacheKey := fmt.Sprintf(keyRelatedCacheFormat, countryID, itemID, paramsHash)
 
+		// Esta es la respuesta que esperamos de la caché, debe coincidir con lo que se guardaría.
+		// Los campos como ExhaustiveFacetsCount, Facets, etc., serán false/nil según el mapper.
 		expectedResponse := model.AlgoliaRelatedProductsResponse{
 			Results: []model.AlgoliaResult{
-				{Hits: []sharedModel.ProductInformation{{ObjectID: "cached123"}}},
+				{
+					Hits:                     []sharedModel.ProductInformation{{ObjectID: "cached123"}},
+					Query:                    queryAlgolia, // El query original
+					Params:                   queryAlgolia, // El query original como params
+					Page:                     0,       // Default de la app si no se parsea de params
+					HitsPerPage:              24,      // Parseado de algoliaParamsStr
+					NbHits:                   1,       // len(hits)
+					NbPages:                  1,       // Calculado por el mapper
+					ExhaustiveFacetsCount:    false,
+					ExhaustiveNbHits:         false,
+					Facets:                   nil,
+					FacetsStats:              nil,
+					RenderingContent:         nil,
+					Length:                   1, // len(hits)
+					Extensions:               model.Extensions{QueryCategorization: nil},
+					// ... otros campos con sus valores cero o por defecto del mapper
+				},
 			},
 		}
 		cachedJSON, _ := json.Marshal(expectedResponse)
@@ -78,7 +96,6 @@ func TestProductsRelated_GetRelatedItems(t *testing.T) {
 		countryID := "CO"
 		itemID := "item456"
 		queryAlgolia := "search term"
-		// hitsPerPage ahora debe ser parte de algoliaParams si se desea un límite específico
 		algoliaParams := "facetFilters=category:electronics&hitsPerPage=10"
 
 		paramsHash := calculateParamsHash("", "", queryAlgolia, "", algoliaParams)
@@ -91,35 +108,46 @@ func TestProductsRelated_GetRelatedItems(t *testing.T) {
 			{ObjectID: "algolia2", HasStock: true, Status: "A"},
 			{ObjectID: itemID, HasStock: true, Status: "A"},
 		}
-		// La query esperada ya no añade hitsPerPage automáticamente.
-		// Se espera que algoliaParams contenga hitsPerPage si es necesario.
 		expectedAlgoliaQuery := fmt.Sprintf("query=%s&%s&filters=NOT objectID:%s", queryAlgolia, algoliaParams, itemID)
 		mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.Any(), expectedAlgoliaQuery, countryID).Return(algoliaHits, nil)
 
-		expectedServiceResponse := model.AlgoliaRelatedProductsResponse{
+		// Esto es lo que se espera que el mapper genere y se guarde en caché/devuelva.
+		expectedServiceResponseToCache := model.AlgoliaRelatedProductsResponse{
 			Results: []model.AlgoliaResult{
 				{
-					Hits: []sharedModel.ProductInformation{ // Solo algolia1 y algolia2
+					Hits: []sharedModel.ProductInformation{
 						{ObjectID: "algolia1", HasStock: true, Status: "A"},
 						{ObjectID: "algolia2", HasStock: true, Status: "A"},
 					},
-					Query:       queryAlgolia,
-					Params:      queryAlgolia,
-					Page:        0,
-					HitsPerPage: 10, // Debería ser 10, extraído de algoliaParams
-					NbHits:      2,
+					Query:                    queryAlgolia,
+					Params:                   queryAlgolia,
+					Page:                     0,    // Default de la app
+					HitsPerPage:              10,   // Parseado de algoliaParams
+					NbHits:                   2,    // len(filteredHits)
+					NbPages:                  1,    // Calculado: Ceil(2/10) = 1
+					ExhaustiveFacetsCount:    false,
+					ExhaustiveNbHits:         false,
+					Facets:                   nil,
+					FacetsStats:              nil,
+					RenderingContent:         nil,
+					Length:                   2,    // len(filteredHits)
+					Extensions:               model.Extensions{QueryCategorization: nil},
+					// ... otros campos con sus valores cero o por defecto del mapper
 				},
 			},
 		}
-		jsonResponse, _ := json.Marshal(expectedServiceResponse)
-		mockCache.EXPECT().Set(gomock.Any(), expectedCacheKey, string(jsonResponse), gomock.Any()).Return(nil)
+		jsonToCache, _ := json.Marshal(expectedServiceResponseToCache)
+		mockCache.EXPECT().Set(gomock.Any(), expectedCacheKey, string(jsonToCache), gomock.Any()).Return(nil)
 
 		result, err := service.GetRelatedItems(ctx, countryID, itemID, "", "", queryAlgolia, "", algoliaParams)
 
 		assert.NoError(t, err)
+		// Comparamos la estructura completa devuelta, que debe coincidir con lo que se guardaría en caché.
+		assert.Equal(t, expectedServiceResponseToCache, result)
+		// Verificaciones individuales adicionales si se desea
 		assert.Len(t, result.Results[0].Hits, 2)
 		assert.Equal(t, "algolia1", result.Results[0].Hits[0].ObjectID)
-		assert.Equal(t, 10, result.Results[0].HitsPerPage) // Verificando que se extrajo de params
+		assert.Equal(t, 10, result.Results[0].HitsPerPage)
 	})
 
 	t.Run("should return error if Algolia call fails", func(t *testing.T) {
@@ -135,7 +163,7 @@ func TestProductsRelated_GetRelatedItems(t *testing.T) {
 		countryID := "MX"
 		itemID := "item789"
 		queryAlgolia := ""
-		algoliaParams := "" // No hitsPerPage especificado aquí
+		algoliaParams := ""
 
 		paramsHash := calculateParamsHash("", "", queryAlgolia, "", algoliaParams)
 		expectedCacheKey := fmt.Sprintf(keyRelatedCacheFormat, countryID, itemID, paramsHash)
@@ -143,7 +171,6 @@ func TestProductsRelated_GetRelatedItems(t *testing.T) {
 		mockCache.EXPECT().Get(gomock.Any(), expectedCacheKey).Return("", nil)
 
 		expectedError := errors.New("Algolia failed")
-		// La query esperada ya no tiene hitsPerPage por defecto
 		expectedAlgoliaQuery := fmt.Sprintf("filters=NOT objectID:%s", itemID)
 		mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.Any(), expectedAlgoliaQuery, countryID).Return(nil, expectedError)
 

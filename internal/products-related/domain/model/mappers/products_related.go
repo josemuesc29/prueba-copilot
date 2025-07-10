@@ -3,60 +3,80 @@ package mappers
 import (
 	"ftd-td-catalog-item-read-services/internal/products-related/domain/model"
 	sharedModel "ftd-td-catalog-item-read-services/internal/shared/domain/model"
+	"math"
 )
 
 // MapToAlgoliaRelatedProductsResponse crea la respuesta principal para productos relacionados.
-// Por ahora, principalmente llena los Hits. Otros campos de AlgoliaResult
-// requerirían que GetProductsInformationByQuery devuelva más que solo los hits.
 func MapToAlgoliaRelatedProductsResponse(
 	hits []sharedModel.ProductInformation,
-	queryParams string,
+	queryParams string, // Este es el 'query' original que se usó para la búsqueda
 	page int,
 	hitsPerPage int,
 ) model.AlgoliaRelatedProductsResponse {
-	// Inicialmente, solo podemos llenar algunos campos de AlgoliaResult
-	// basados en la información que tenemos directamente.
-	// Si proxy_catalog_product.GetProductsInformationByQuery se modifica
-	// para devolver la respuesta completa de Algolia, este mapper se actualizaría.
+
+	nbPages := 0
+	if hitsPerPage > 0 && len(hits) > 0 { // Evitar división por cero y calcular solo si hay hits
+		nbPages = int(math.Ceil(float64(len(hits)) / float64(hitsPerPage)))
+	} else if len(hits) == 0 && hitsPerPage >=0 { // No hits, no pages (o 1 si se considera así)
+		nbPages = 0 // O 1, dependiendo de la convención de Algolia para 0 hits. El error indicaba 0.
+	} else if hitsPerPage == 0 && len(hits) > 0 { // Si hitsPerPage es 0 pero hay hits, es 1 página.
+        nbPages = 1
+    }
+
+
+	// Si hitsPerPage no fue especificado o es inválido (ej. 0 o negativo),
+	// y tenemos hits, entonces todos los hits están en una página.
+	// Si hitsPerPage es positivo, se usa para el cálculo.
+	effectiveHitsPerPage := hitsPerPage
+	if effectiveHitsPerPage <= 0 && len(hits) > 0 {
+		effectiveHitsPerPage = len(hits) // Todos los hits en una página si hitsPerPage no es válido
+		nbPages = 1
+	}
+	if len(hits) == 0 { // Si no hay hits, nbPages es 0 (o 1, ver arriba), y hpp puede ser el solicitado o 0
+	    if hitsPerPage <= 0 { // Si no se pidió HPP y no hay hits
+            effectiveHitsPerPage = 0
+        } else {
+            effectiveHitsPerPage = hitsPerPage // Se respeta el HPP pedido aunque no haya hits
+        }
+		nbPages = 0 // Alineado con el "Want" del error
+	}
+
 
 	algoliaResult := model.AlgoliaResult{
 		Hits:             hits,
-		Query:            queryParams, // Asumiendo que queryParams es el 'query' original
-		Params:           queryParams, // Esto podría ser más detallado si tuviéramos todos los params de Algolia
+		Query:            queryParams,
+		Params:           queryParams,
 		Page:             page,
-		HitsPerPage:      hitsPerPage,
-		NbHits:           len(hits), // Esto es solo el número de hits en la página actual, no el total de Algolia
-		NbPages:          1,         // Asumimos 1 página por ahora, necesitaría nbHits total de Algolia
-		// Otros campos como Facets, FacetsStats, QueryID, etc.,
-		// necesitarían la respuesta completa de Algolia.
-		// Los dejamos con sus valores cero/default por ahora.
-		AppliedRules:             nil,
+		HitsPerPage:      effectiveHitsPerPage,
+		NbHits:           len(hits),
+		NbPages:          nbPages,
+		AppliedRules:     nil,
 		AppliedRelevancyStrictness: 0,
-		AroundLatLng:             "",
-		AutomaticRadius:          "",
-		ExhaustiveFacetsCount:    true, // Valor por defecto
-		ExhaustiveNbHits:         true, // Valor por defecto
+		AroundLatLng:     "",
+		AutomaticRadius:  "",
+		ExhaustiveFacetsCount:    false, // Ajustado
+		ExhaustiveNbHits:         false, // Ajustado
 		Explain:                  nil,
-		Extensions:               model.Extensions{},
-		Facets:                   make(map[string]map[string]int),
-		FacetsStats:              make(map[string]model.FacetStat),
-		Index:                    "", // Necesitaría info de Algolia
-		IndexUsed:                "", // Necesitaría info de Algolia
-		Length:                   len(hits),
+		Extensions:               model.Extensions{QueryCategorization: nil}, // Asegurar que el campo interno sea nil
+		Facets:                   nil, // Ajustado
+		FacetsStats:              nil, // Ajustado
+		Index:                    "",
+		IndexUsed:                "",
+		Length:                   len(hits), // Ajustado: longitud de los hits en esta página
 		Message:                  "",
 		NbSortedHits:             0,
-		Offset:                   page * hitsPerPage,
-		ParsedQuery:              queryParams, // Asumiendo que queryParams es el 'query' original
-		ProcessingTimeMS:         0, // Necesitaría info de Algolia
+		Offset:                   page * effectiveHitsPerPage, // Usar effectiveHitsPerPage
+		ParsedQuery:              queryParams,
+		ProcessingTimeMS:         0,
 		QueryAfterRemoval:        "",
-		QueryID:                  "", // Necesitaría info de Algolia
+		QueryID:                  "",
 		ServerUsed:               "",
 		TimeoutCounts:            false,
 		TimeoutHits:              false,
 		UserData:                 nil,
 		ABTestVariantID:          0,
 		ABTestID:                 0,
-		RenderingContent:         make(map[string]interface{}),
+		RenderingContent:         nil, // Ajustado
 	}
 
 	return model.AlgoliaRelatedProductsResponse{
@@ -64,23 +84,21 @@ func MapToAlgoliaRelatedProductsResponse(
 	}
 }
 
-// MapProductInformationToRelatedItem se mantiene por si se necesita internamente,
-// pero la respuesta principal usará MapToAlgoliaRelatedProductsResponse.
-// Esta función convierte un sharedModel.ProductInformation a model.RelatedItem.
+// MapProductInformationToRelatedItem se mantiene por si se necesita internamente.
 func MapProductInformationToRelatedItem(product sharedModel.ProductInformation, storeGroupID int64) model.RelatedItem {
 	return model.RelatedItem{
 		MediaImageUrl:     product.MediaImageUrl,
-		Description:       product.MediaDescription, // Usando MediaDescription como en best-seller
+		Description:       product.MediaDescription,
 		FullPrice:         product.FullPrice,
 		MediaDescription:  product.MediaDescription,
-		Brand:             product.Brand, // Nota: ProductInformation tiene Brand y Marca. Usamos Brand consistentemente.
+		Brand:             product.Brand,
 		Sales:             product.Sales,
 		DetailDescription: product.GrayDescription,
 		OfferPrice:        product.OfferPrice,
 		OfferDescription:  product.OfferDescription,
 		ID:                product.ID,
 		OfferText:         product.OfferText,
-		IdStoreGroup:      storeGroupID, // Este campo no está en ProductInformation, se pasa como arg.
+		IdStoreGroup:      storeGroupID,
 		Marca:             product.Marca,
 		ObjectID:          product.ObjectID,
 		OnlyOnline:        product.OnlyOnline,
@@ -110,7 +128,7 @@ func MapProductInformationToRelatedItem(product sharedModel.ProductInformation, 
 		RmsDeparment:      product.RmsDeparment,
 		RmsGroup:          product.RmsGroup,
 		RmsSubclass:       product.RmsSubclass,
-		WithoutStock:      !product.HasStock, // Asumiendo que WithoutStock es la negación de HasStock
+		WithoutStock:      !product.HasStock,
 		URL:               product.URL,
 	}
 }
