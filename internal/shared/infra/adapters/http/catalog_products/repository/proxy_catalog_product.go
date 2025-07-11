@@ -18,7 +18,7 @@ import (
 
 const (
 	retry                          = 1
-	urlCatalogProducts             = "%s/1/indexes/products-colombia/%s"
+	urlCatalogProducts             = "%s/1/indexes/products-argentina/%s"
 	urlCatalogProductsByObjectsIds = "%s/1/indexes/*/objects"
 	urlCatalogProductsByQuery      = "%s/1/indexes/*/queries"
 	headerContentType              = "Content-Type"
@@ -51,6 +51,7 @@ func (t CatalogProduct) GetProductInformation(c *gin.Context, productID string) 
 			Headers: http.Header{
 				headerContentType:   {contentTypeValueJson},
 				headerAlgoliaApiKey: {config.Enviroments.ApiKeyCatalogProducts},
+				headerAlgoliaAppID:  {config.Enviroments.ApplicationIDCatalogProducts},
 			},
 			Context: c,
 		},

@@ -169,7 +169,7 @@ func (p *productsRelated) shouldIncludeProduct(product sharedModel.ProductInform
 	if product.ObjectID == originalItemID {
 		return false
 	}
-	return product.HasStock == true && product.Status == "A"
+	return product.HasStock && product.Status == "A"
 }
 
 func parseQueryParams(queryStr string) map[string]string {

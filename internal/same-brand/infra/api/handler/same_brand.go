@@ -51,7 +51,7 @@ func (h sameBrand) GetItemsSameBrand(c *gin.Context) {
 	}
 
 	log.Printf(enums.LogFormat, correlationID, getItemsSameBrandLog, fmt.Sprintf(enums.CallService, getItemsSameBrand))
-	data, err := h.portSameBrand.GetItemsSameBrand(c, requestDto.CountryID, requestDto.ItemID)
+	data, err := h.portSameBrand.GetItemsBySameBrand(c, requestDto.CountryID, requestDto.ItemID)
 
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, getItemsSameBrandLog, fmt.Sprintf(enums.GetData, "error", serviceSameBrand))

@@ -2,6 +2,7 @@ package router
 
 import (
 	bestSellerGroup "ftd-td-catalog-item-read-services/internal/best-seller/infra/api/groups"
+	itemDetailGroup "ftd-td-catalog-item-read-services/internal/detail/infra/api/groups"
 	"ftd-td-catalog-item-read-services/internal/health/infra/api/groups"
 	productsRelatedGroup "ftd-td-catalog-item-read-services/internal/products-related/infra/api/groups"
 	sameBrandGroup "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/groups"
@@ -16,6 +17,7 @@ type Router struct {
 	bestSellerGroup      bestSellerGroup.BestSeller
 	sameBrandGroup       sameBrandGroup.SameBrand
 	productsRelatedGroup productsRelatedGroup.ProductsRelatedGroup
+	itemDetailGroup      itemDetailGroup.Group
 }
 
 func NewRouter(
@@ -23,12 +25,14 @@ func NewRouter(
 	bestSellerGroup bestSellerGroup.BestSeller,
 	sameBrandGroup sameBrandGroup.SameBrand,
 	productsRelatedGroup productsRelatedGroup.ProductsRelatedGroup,
+	itemDetailGroup itemDetailGroup.Group,
 ) *Router {
 	return &Router{
 		healthGroup:          healthGroup,
 		bestSellerGroup:      bestSellerGroup,
 		sameBrandGroup:       sameBrandGroup,
 		productsRelatedGroup: productsRelatedGroup,
+		itemDetailGroup:      itemDetailGroup,
 	}
 }
 
@@ -43,7 +47,7 @@ func SetupRouter(r *Router) *gin.Engine {
 	r.bestSellerGroup.Source(router.Group(basePath))
 	r.sameBrandGroup.Source(router.Group(basePath))
 	r.productsRelatedGroup.Source(router.Group(basePath))
-
+	r.itemDetailGroup.Source(router.Group(basePath))
 	return router
 }
 

@@ -27,5 +27,5 @@ func NewProductsRelatedGroup(h productsRelatedHandler.ProductsRelatedHandler) Pr
 func (g *productsRelatedGroup) Source(rg *gin.RouterGroup) {
 
 	group := rg.Group(productsRelatedPath)
-	group.GET("/:countryId/v2/item/:itemId", g.handler.GetRelatedItems, middleware.ValidateCountryID())
+	group.GET("/:itemId", g.handler.GetRelatedItems, middleware.ValidateCountryID())
 }

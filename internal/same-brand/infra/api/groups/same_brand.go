@@ -28,5 +28,5 @@ func NewSameBrand(sameBrandH handler.SameBrand) SameBrand {
 func (g sameBrand) Source(rg *gin.RouterGroup) {
 	group := rg.Group(sameBrandPath)
 
-	group.GET("/:countryId/v2/item/:itemId", g.sameBrandH.GetItemsSameBrand, middleware.ValidateCountryID())
+	group.GET("/:itemId", g.sameBrandH.GetItemsSameBrand, middleware.ValidateCountryID())
 }

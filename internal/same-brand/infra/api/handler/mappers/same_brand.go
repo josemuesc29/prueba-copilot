@@ -7,14 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func ModelSameBrandItemListToSameBrandItemDtoList(items []model.SameBrandItem) []response.Item {
-	var dtoList []response.Item
+func ModelSameBrandItemListToSameBrandItemDtoList(items []model.SameBrandItem) []response.SameBrandResponse {
+	var dtoList []response.SameBrandResponse
 
 	err := copier.Copy(&dtoList, &items)
 	if err != nil {
 
 		log.Println("Error copying items:", err)
-		return []response.Item{}
+		return []response.SameBrandResponse{}
 	}
 
 	return dtoList

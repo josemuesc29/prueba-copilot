@@ -1,6 +1,28 @@
-package model
+package response
 
-type SameBrandItem struct {
+type Classification struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	TypeID   int    `json:"typeId"`
+	TypeName string `json:"typeName"`
+}
+
+type CustomLabelForStockZeroByCity struct {
+	CityCode    string `json:"cityCode"`
+	CustomLabel string `json:"customLabel"`
+}
+
+type FullPriceByCity struct {
+	CityCode  string  `json:"cityCode"`
+	FullPrice float64 `json:"fullPrice"`
+}
+
+type LastUpdate struct {
+	JobName   string `json:"jobName"`
+	TimeStamp int64  `json:"timeStamp"`
+}
+
+type ItemDetailResponse struct {
 	ID                            string                          `json:"id"`
 	MediaDescription              string                          `json:"mediaDescription"`
 	LargeDescription              string                          `json:"largeDescription"`
@@ -66,26 +88,4 @@ type SameBrandItem struct {
 	TaxRate                       int                             `json:"taxRate"`
 	URL                           string                          `json:"url"`
 	UrlCanonical                  *string                         `json:"urlCanonical"`
-}
-
-type Classification struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	TypeID   int    `json:"typeId"`
-	TypeName string `json:"typeName"`
-}
-
-type CustomLabelForStockZeroByCity struct {
-	CityCode    string `json:"cityCode"`
-	CustomLabel string `json:"customLabel"`
-}
-
-type FullPriceByCity struct {
-	CityCode  string  `json:"cityCode"`
-	FullPrice float64 `json:"fullPrice"`
-}
-
-type LastUpdate struct {
-	JobName   string `json:"jobName"`
-	TimeStamp int64  `json:"timeStamp"`
 }

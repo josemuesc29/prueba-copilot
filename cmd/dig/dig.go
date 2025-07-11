@@ -6,6 +6,9 @@ import (
 	bestSellerRepository "ftd-td-catalog-item-read-services/internal/best-seller/infra/adapters/database/repository"
 	bestSellerGroup "ftd-td-catalog-item-read-services/internal/best-seller/infra/api/groups"
 	bestSellerHanlder "ftd-td-catalog-item-read-services/internal/best-seller/infra/api/handler"
+	detailService "ftd-td-catalog-item-read-services/internal/detail/app"
+	detailGroup "ftd-td-catalog-item-read-services/internal/detail/infra/api/groups"
+	detailHandler "ftd-td-catalog-item-read-services/internal/detail/infra/api/handler"
 	healthGroup "ftd-td-catalog-item-read-services/internal/health/infra/api/groups"
 	healthHanlder "ftd-td-catalog-item-read-services/internal/health/infra/api/handler"
 	productsRelatedService "ftd-td-catalog-item-read-services/internal/products-related/app"
@@ -32,13 +35,13 @@ func BuildContainer() *dig.Container {
 		bestSellerHanlder.NewBestSeller,
 		sameBrandHandler.NewSameBrand,
 		productsRelatedHandler.NewProductsRelatedHandler,
-
+		detailHandler.NewDetailHandler,
 		// Groups
 		healthGroup.NewHealthGroup,
 		bestSellerGroup.NewBestSeller,
 		sameBrandGroup.NewSameBrand,
 		productsRelatedGroup.NewProductsRelatedGroup,
-
+		detailGroup.NewDetailGroup,
 		// Database
 		configDatabase.NewPostgresConnection,
 
@@ -48,12 +51,12 @@ func BuildContainer() *dig.Container {
 		sharedCatalogCategoryRepository.NewCatalogCategory,
 		sharedCatalogProductsRepository.NewCatalogProduct,
 		sharedCacheRepository.NewCache,
-
+		
 		// Services
 		bestSellerService.NewBestSeller,
 		sameBrandService.NewSameBrand,
 		productsRelatedService.NewProductsRelated,
-
+		detailService.NewItemDetail,
 		// Router
 		router.NewRouter,
 
