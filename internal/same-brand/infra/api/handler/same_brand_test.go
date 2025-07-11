@@ -72,7 +72,7 @@ func TestSameBrandHandler_GetItemsSameBrand_Success(t *testing.T) {
 	dataBytes, err := json.Marshal(actualResponse.Data)
 	assert.NoError(t, err)
 
-	var actualDataPayload []dto_response_samebrand.Item
+	var actualDataPayload []dto_response_samebrand.SameBrandResponse
 	err = json.Unmarshal(dataBytes, &actualDataPayload)
 	assert.NoError(t, err)
 
@@ -82,7 +82,7 @@ func TestSameBrandHandler_GetItemsSameBrand_Success(t *testing.T) {
 	assert.Equal(t, "BrandX", item.Brand)
 	assert.Equal(t, 10, item.TotalStock)
 	assert.Equal(t, "A", item.Status)
-	assert.Equal(t, "img.jpg", item.MediaImageURL)
+	assert.Equal(t, "img.jpg", item.MediaImageUrl) // Corregido de MediaImageURL a MediaImageUrl
 	assert.Equal(t, "url1", item.URL)
 }
 

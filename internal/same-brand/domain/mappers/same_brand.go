@@ -21,5 +21,12 @@ func MapProductInformationToSameBrandItem(productsInformation *sharedModel.Produ
 		return sameBrandItem, fmt.Errorf("error al copiar los datos del producto: %w", err)
 	}
 
+	// Restaurar lógica de cálculo para TotalStock
+	if productsInformation.StoresWithStock != nil {
+		sameBrandItem.TotalStock = len(productsInformation.StoresWithStock)
+	} else {
+		sameBrandItem.TotalStock = 0
+	}
+
 	return sameBrandItem, nil
 }

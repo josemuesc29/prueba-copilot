@@ -45,7 +45,6 @@ func NewSameBrand(
 }
 
 func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID string) ([]model.SameBrandItem, error) {
-	var sameBrandItem model.SameBrandItem
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
 		if idStr, typeOk := id.(string); typeOk {
