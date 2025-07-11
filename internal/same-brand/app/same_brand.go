@@ -104,7 +104,13 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID stri
 	}
 
 	for _, productInfo := range processedItems {
-		rs = append(rs, mappers.MapProductInformationToSameBrandItem(&sameBrandItem, &productInfo))
+		item, errMap := mappers.MapProductInformationToSameBrandItem(&productInfo)
+		if errMap != nil {
+			log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+				fmt.Sprintf("Error mapping product information for item %s: %v", productInfo.ObjectID, errMap))
+			continue // o manejar el error de otra forma si es necesario
+		}
+		rs = append(rs, item)
 	}
 
 	if len(rs) > 0 {

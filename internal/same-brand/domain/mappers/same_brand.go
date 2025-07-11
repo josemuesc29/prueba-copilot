@@ -8,17 +8,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func MapProductInformationToSameBrandItem(sameBrand *model.SameBrandItem, productsInformation *sharedModel.ProductInformation) error {
-	if sameBrand == nil || productsInformation == nil {
-		return fmt.Errorf("flashOffers o productsInformation están vacíos")
+func MapProductInformationToSameBrandItem(productsInformation *sharedModel.ProductInformation) (model.SameBrandItem, error) {
+	var sameBrandItem model.SameBrandItem
+	if productsInformation == nil {
+		return sameBrandItem, fmt.Errorf("productsInformation está vacío")
 	}
 
-	err := copier.Copy(&sameBrand, &productsInformation)
+	err := copier.Copy(&sameBrandItem, productsInformation)
 
 	if err != nil {
 		log.Printf("copier error: %v", err)
-		return fmt.Errorf("error al copiar los datos del producto: %w", err)
+		return sameBrandItem, fmt.Errorf("error al copiar los datos del producto: %w", err)
 	}
 
-	return nil
+	return sameBrandItem, nil
 }
