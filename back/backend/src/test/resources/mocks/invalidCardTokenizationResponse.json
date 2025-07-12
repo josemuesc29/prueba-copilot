@@ -1,0 +1,6 @@
+{
+  "code": "ERROR",
+  "error": "El número de la tarjeta de crédito no es válido, tarjeta crédito: [454611******1111], tipo: [VISA]",
+  "creditCardToken": null,
+  "transactionResponse": null
+}

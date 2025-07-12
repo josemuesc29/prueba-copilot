@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee">
+  <filter>
+    <filter-name>ObjectifyFilter</filter-name>
+    <filter-class>com.googlecode.objectify.ObjectifyFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>ObjectifyFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!--  <filter>-->
+  <!--    <filter-name>CorsFilter</filter-name>-->
+  <!--    <filter-class>com.imaginamos.farmatodo.backend.CORSFilter</filter-class>-->
+  <!--  </filter>-->
+
+  <!--  <filter-mapping>-->
+  <!--    <filter-name>CorsFilter</filter-name>-->
+  <!--    <url-pattern>/*</url-pattern>-->
+  <!--  </filter-mapping>-->
+
+  <!--  Init security configuration-->
+  <!-- Add a filter that fetches the service config from service management. -->
+  <!--  <filter>-->
+  <!--    <filter-name>endpoints-api-configuration</filter-name>-->
+  <!--    <filter-class>com.google.api.control.ServiceManagementConfigFilter</filter-class>-->
+  <!--  </filter>-->
+
+  <!-- Add a filter that performs Endpoints logging and monitoring. -->
+  <filter>
+    <filter-name>endpoints-api-controller</filter-name>
+    <filter-class>com.google.api.control.extensions.appengine.GoogleAppEngineControlFilter</filter-class>
+    <init-param>
+      <param-name>endpoints.projectId</param-name>
+      <param-value>${endpoints.project.id}</param-value>
+    </init-param>
+    <init-param>
+      <param-name>endpoints.serviceName</param-name>
+      <param-value>${endpoints.project.id}.appspot.com</param-value>
+    </init-param>
+  </filter>
+
+  <!--  <filter-mapping>-->
+  <!--    <filter-name>endpoints-api-configuration</filter-name>-->
+  <!--    <servlet-name>EndpointsServlet</servlet-name>-->
+  <!--  </filter-mapping>-->
+
+  <filter-mapping>
+    <filter-name>endpoints-api-controller</filter-name>
+    <servlet-name>EndpointsServlet</servlet-name>
+  </filter-mapping>
+  <!--  End security configuration-->
+
+  <servlet>
+    <servlet-name>EndpointsServlet</servlet-name>
+    <servlet-class>com.google.api.server.spi.EndpointsServlet</servlet-class>
+    <init-param>
+      <param-name>services</param-name>
+      <param-value>
+          com.imaginamos.farmatodo.backend.customer.CustomerEndpoint,
+          com.imaginamos.farmatodo.backend.customerAddress.CustomerAddressEndpoint,
+          com.imaginamos.farmatodo.backend.algolia.AlgoliaEndpoint,
+          com.imaginamos.farmatodo.backend.callcenter.CallCenterEndpoint,
+          com.imaginamos.farmatodo.backend.location.LocationEndpoint,
+          com.imaginamos.farmatodo.backend.categories.CategoryEndpoint,
+          com.imaginamos.farmatodo.backend.cms.BannerEndpoint,
+          com.imaginamos.farmatodo.backend.cms.OutstandingProductsEndpoint,
+          com.imaginamos.farmatodo.backend.order.create_order.infraestructure.OrderEndpoint,
+          com.imaginamos.farmatodo.backend.offer.OfferEndpoint,
+          com.imaginamos.farmatodo.backend.product.ProductEndpoint,
+          com.imaginamos.farmatodo.backend.configuration.ConfigurationEndpoint,
+          com.imaginamos.farmatodo.backend.images.BlobEndpoint,
+          com.imaginamos.farmatodo.backend.coupon.validate_coupon.infraestructure.CouponEndpoint,
+          com.imaginamos.farmatodo.backend.copyrigth.CopyrightEndPoint,
+          com.imaginamos.farmatodo.backend.service.ServiceEndpoint,
+          com.imaginamos.farmatodo.backend.product.FiltersEndPoint,
+          com.imaginamos.farmatodo.backend.item.ItemEndPoint,
+          com.imaginamos.farmatodo.backend.rms.RMSEndpoint,
+          com.imaginamos.farmatodo.backend.sim.SIMEndpoint,
+          com.imaginamos.farmatodo.backend.order.create_order.infraestructure.CreateOrderEndpoint,
+          com.imaginamos.farmatodo.backend.talonone.TalonOneEndpoint,
+          com.imaginamos.farmatodo.backend.order.create_order.infraestructure.PriceDelivery,
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>restricted</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>EndpointsServlet</servlet-name>
+    <url-pattern>/_ah/api/*</url-pattern>
+  </servlet-mapping>
+
+
+  <servlet>
+    <servlet-name>EndpointsServletStart</servlet-name>
+    <servlet-class>com.google.api.server.spi.EndpointsServlet</servlet-class>
+    <init-param>
+      <param-name>services</param-name>
+      <param-value>
+        com.imaginamos.farmatodo.backend.start.StartEndpoint
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>restricted</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>EndpointsServletStart</servlet-name>
+    <url-pattern>/_ah/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>SegmentUpload</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.backend.util.SegmentUpload</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SegmentUpload</servlet-name>
+    <url-pattern>/segmentUpload</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>FirebaseServlet</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.backend.firebase.FirebaseServlet</servlet-class>
+    <init-param>
+      <param-name>credential</param-name>
+      <param-value>/WEB-INF/oracle-services-bca868aa3d53.json</param-value>
+      <!--      <param-value>/WEB-INF/sandbox-domicilios-farmatodo-firebase.json</param-value>-->
+    </init-param>
+    <init-param>
+      <param-name>databaseUrl</param-name>
+      <param-value>https://stunning-base-164402.firebaseio.com/</param-value>
+      <!--      <param-value>https://sandbox-domicilios-farmatodo.firebaseio.com/</param-value>-->
+    </init-param>
+    <load-on-startup>0</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>FirebaseServlet</servlet-name>
+    <url-pattern>/firebaseServlet</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>BlobUpload</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.backend.images.BlobUpload</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>BlobUpload</servlet-name>
+    <url-pattern>/blobupload</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ChangeOrder</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.backend.order.ChangeOrder</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChangeOrder</servlet-name>
+    <url-pattern>/changeOrder</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>DeleteStocks</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.backend.product.DeleteStocks</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DeleteStocks</servlet-name>
+    <url-pattern>/deleteStocks</url-pattern>
+  </servlet-mapping>
+
+
+  <servlet>
+    <servlet-name>TestEndpoint</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.backend.TestEndpoint</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>TestEndpoint</servlet-name>
+    <url-pattern>/testEndpoint</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>CustomerEmailChange</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.backend.email.CustomerEmailChange</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>CustomerEmailChange</servlet-name>
+    <url-pattern>/customerEmailChange</url-pattern>
+  </servlet-mapping>
+
+
+
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+</web-app>

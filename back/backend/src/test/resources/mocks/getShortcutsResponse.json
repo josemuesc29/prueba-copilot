@@ -1,0 +1,55 @@
+{
+  "items": null,
+  "departmentList": null,
+  "subCategoryList": null,
+  "shortCutList": [
+    {
+      "id": 46,
+      "description": "Pañales",
+      "imageURL": "https://lh3.googleusercontent.com/SuACPgavqtDrLcAu0OkiBYGVTnvYsB0bqymM92Fw9X7hwH9XswCzHYnEH3dv7ISbyHTXbcuQJrOvUaL9yNNnbc8C6vIa14whoiw",
+      "redirectURL": "#/category/154/155/176",
+      "clasificationId": 154,
+      "orderingNumber": 89
+    },
+    {
+      "id": 5,
+      "description": "Higiene del Bebé",
+      "imageURL": "https://lh3.googleusercontent.com/HDGQpIxyCf5muelGN2J9WHx9brlPvTL6jxiDHqEOIUbbusP5VXqiP4H5OTdiloCyFA8wg1aeQ4iZhcQ_sf94afwAXp2_NHFuPVMw",
+      "redirectURL": "#/category/154/158",
+      "clasificationId": 154,
+      "orderingNumber": 100
+    },
+    {
+      "id": 45,
+      "description": "Formulas infantiles",
+      "imageURL": "https://lh3.googleusercontent.com/1-4Q1K_wAUz1qVKq93ORaq5PM1vy2z4btqnJy4-CogVdyaqWlvrphYEp_lJ0IeNKHcErqVBbJkAaBJqWfzSbAt75nOC68bLa3b6-",
+      "redirectURL": "#/category/154/156",
+      "clasificationId": 154,
+      "orderingNumber": 100
+    },
+    {
+      "id": 6,
+      "description": "Compotas y cereales ",
+      "imageURL": "https://lh3.googleusercontent.com/_-S9VCYtFe8AMy29r-t4BGG4vYRzaDLlPIQbD3p1fVWULqXDHCClzWNTQQ6qI1hz8t0-c5iBi41W-06HJnWkH5_EjiPE6IlEoA",
+      "redirectURL": "#/category/154/157",
+      "clasificationId": 154,
+      "orderingNumber": 100
+    },
+    {
+      "id": 1,
+      "description": "Pañitos Húmedos ",
+      "imageURL": "https://lh3.googleusercontent.com/RFehldtJAIX5HY1ID312MCfWRu6UXqQUtzJ-u87qmXcOHYp0cjeAn1Xfgke31X9mXEJqM0bEjE9XhwqY4Op45NMtCwlgmGVaZ1XQ",
+      "redirectURL": "#/category/154/155/177",
+      "clasificationId": 154,
+      "orderingNumber": 100
+    }
+  ],
+  "highlightList": null,
+  "offerList": null,
+  "countries": null,
+  "activeOrders": null,
+  "previousOrders": null,
+  "timeStamp": null,
+  "totalProducts": null,
+  "nextPageToken": null
+}

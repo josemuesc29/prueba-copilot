@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<queue-entries>
+  <queue>
+    <name>productmanager</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+  <queue>
+    <name>stockmanager</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+  <queue>
+    <name>crossmanager</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+  <queue>
+    <name>substitutesmanager</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+  <queue>
+    <name>algoliamanager</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+  <queue>
+    <name>offermanager</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+  <queue>
+    <name>algolia</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+  <queue>
+    <name>cronqueue</name>
+    <rate>500/s</rate>
+    <bucket-size>500</bucket-size>
+    <mode>push</mode>
+    <max-concurrent-requests>7000</max-concurrent-requests>
+
+    <retry-parameters>
+      <task-retry-limit>9</task-retry-limit>
+    </retry-parameters>
+  </queue>
+
+</queue-entries>

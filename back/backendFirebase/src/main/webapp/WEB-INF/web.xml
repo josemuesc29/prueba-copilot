@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee">
+  <filter>
+    <filter-name>ObjectifyFilter</filter-name>
+    <filter-class>com.googlecode.objectify.ObjectifyFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>ObjectifyFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+
+  <servlet>
+    <servlet-name>EndpointsServlet</servlet-name>
+    <servlet-class>com.google.api.server.spi.EndpointsServlet</servlet-class>
+    <init-param>
+      <param-name>services</param-name>
+      <param-value>
+        com.imaginamos.farmatodo.firebase.FirebaseEndpoint
+       </param-value>
+    </init-param>
+    <init-param>
+      <param-name>restricted</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>EndpointsServlet</servlet-name>
+    <url-pattern>/_ah/api/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>FirebaseDatabaseFarmatodo</servlet-name>
+    <servlet-class>com.imaginamos.farmatodo.firebase.FirebaseDatabaseFarmatodo</servlet-class>
+
+    <init-param>
+      <param-name>credential</param-name>
+      <param-value>/WEB-INF/oracle-services-bca868aa3d53.json</param-value>
+    </init-param>
+    <init-param>
+      <param-name>databaseUrl</param-name>
+      <param-value>https://stunning-base-164402.firebaseio.com/</param-value>
+    </init-param>
+    <load-on-startup>0</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>FirebaseDatabaseFarmatodo</servlet-name>
+    <url-pattern>/firebaseDatabaseFarmatodo</url-pattern>
+  </servlet-mapping>
+
+
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+</web-app>

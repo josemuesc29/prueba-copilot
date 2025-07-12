@@ -1,0 +1,436 @@
+{
+  "itemId": "1000001",
+  "anywaySelling": false,
+  "barcode": 7702057070144,
+  "brand": "2008M-0008623",
+  "filterList": [
+    "900",
+    "823",
+    "454"
+  ],
+  "fullPrice": 32100,
+  "grayDescription": "500mg Tabletas Caja X100tab.",
+  "highlight": false,
+  "id": 1000001,
+  "idStoreGroup": 0,
+  "isGeneric": false,
+  "mediaDescription": "Acetaminofén Adultos Mk",
+  "mediaImageUrl": "https://lh3.googleusercontent.com/7ZCdcj2BCpgJQXFlDnAclXJ1JsBKdA-y-tsDEUsp0pnMF2DdVSDsPHKyzyJAeld--53iVQHvUUcZs_iTqNE_8NIds_anbtHI9g",
+  "offerDescription": null,
+  "offerPrice": 0,
+  "offerText": null,
+  "outstanding": false,
+  "requirePrescription": false,
+  "sales": 9,
+  "spaces": 1,
+  "status": "A",
+  "storeInformation": [
+    {
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "2",
+      "offerDescription": null
+    },
+    {
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "3",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "2"
+    },
+    {
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "4",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "2"
+    },
+    {
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "6"
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "7",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "9",
+      "offerDescription": null
+    },
+    {
+      "fullPrice": "32100",
+      "storeGroupId": "11",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0"
+    },
+    {
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "14",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "15",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "0",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "16",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "19",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "0",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "20",
+      "offerDescription": null
+    },
+    {
+      "storeGroupId": "22",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "23",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "24",
+      "offerDescription": null
+    },
+    {
+      "storeGroupId": "26",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "fullPrice": "32100",
+      "storeGroupId": "27",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "0",
+      "offerPrice": "0"
+    },
+    {
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "28",
+      "offerDescription": null
+    },
+    {
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "29",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1"
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "30",
+      "offerDescription": null
+    },
+    {
+      "fullPrice": "32100",
+      "storeGroupId": "31",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "0",
+      "offerPrice": "0"
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "32",
+      "offerDescription": null
+    },
+    {
+      "fullPrice": "32100",
+      "storeGroupId": "37",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0"
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "39",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "40",
+      "offerDescription": null
+    },
+    {
+      "storeGroupId": "41",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "42",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "43",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "44",
+      "offerDescription": null
+    },
+    {
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "45"
+    },
+    {
+      "storeGroupId": "46",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "47",
+      "offerDescription": null
+    },
+    {
+      "storeGroupId": "49",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "storeGroupId": "50",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "0",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "51",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "52",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "54",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "0",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "60",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "61",
+      "offerDescription": null
+    },
+    {
+      "storeGroupId": "62",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "0",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "storeGroupId": "63",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "64",
+      "offerDescription": null
+    },
+    {
+      "storeGroupId": "65",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100"
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "67",
+      "offerDescription": null
+    },
+    {
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "68"
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "69",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "71",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "2",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "72",
+      "offerDescription": null
+    },
+    {
+      "offerText": null,
+      "stock": "3",
+      "offerPrice": "0",
+      "fullPrice": "32100",
+      "storeGroupId": "73",
+      "offerDescription": null
+    },
+    {
+      "fullPrice": "32100",
+      "storeGroupId": "79",
+      "offerDescription": null,
+      "offerText": null,
+      "stock": "1",
+      "offerPrice": "0"
+    }
+  ],
+  "subCategories": [
+    "14"
+  ],
+  "taxRate": 0,
+  "toDelete": false,
+  "toIndexInAlgolia": false,
+  "totalStock": 0
+}

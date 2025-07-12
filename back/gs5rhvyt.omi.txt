@@ -1,0 +1,27 @@
+﻿Delete address, list orders and minor fixes
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch eric.dev
+# Your branch is up-to-date with 'origin/eric.dev'.
+#
+# Changes to be committed:
+#	modified:   backend/build.gradle
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/callcenter/CallCenterEndpoint.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/categories/CategoryEndpoint.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/customer/CustomerEndpoint.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/customer/Customers.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/order/OrderEndpoint.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/order/Orders.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/user/Authenticate.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/util/Constants.java
+#	modified:   backend/src/main/java/com/imaginamos/farmatodo/backend/util/URLConnections.java
+#	modified:   backend/src/main/webapp/WEB-INF/datastore-indexes.xml
+#	modified:   backendCron/src/main/java/com/farmatodo/backend/HighlightProductUpload.java
+#	modified:   backendCron/src/main/java/com/farmatodo/backend/StockAndPriceUpload.java
+#	new file:   model/src/main/java/com/imaginamos/farmatodo/model/customer/CreditCardToken.java
+#	new file:   model/src/main/java/com/imaginamos/farmatodo/model/order/DeliveryOrderJson.java
+#	modified:   model/src/main/java/com/imaginamos/farmatodo/model/order/ShoppingCartJson.java
+#	modified:   model/src/main/java/com/imaginamos/farmatodo/model/product/ItemOrder.java
+#	modified:   model/src/main/java/com/imaginamos/farmatodo/model/user/User.java
+#
+

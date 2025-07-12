@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://appengine.google.com/ns/1.0 ">
+    <application>stunning-base-164402</application>
+    <service>${service}</service>
+    <instance-class>F1</instance-class>
+    <automatic-scaling>
+        <max-instances>5</max-instances>
+        <min-instances>0</min-instances>
+        <target-cpu-utilization>0.95</target-cpu-utilization>
+        <target-throughput-utilization>0.95</target-throughput-utilization>
+        <max-concurrent-requests>80</max-concurrent-requests>
+        <max-idle-instances>1</max-idle-instances>
+    </automatic-scaling>
+    <app-engine-apis>true</app-engine-apis>
+    <runtime>java17</runtime>
+    <ssl-enabled>true</ssl-enabled>
+    <system-properties>
+        <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+    </system-properties>
+    <env-variables>
+        <env-var name="ENDPOINTS_SERVICE_NAME" value="${endpoints.project.id}.appspot.com"/>
+    </env-variables>
+    <vpc-access-connector>
+        <name>projects/stunning-base-164402/locations/us-central1/connectors/ftdnetworkvpc-1</name>
+    </vpc-access-connector>
+</appengine-web-app>

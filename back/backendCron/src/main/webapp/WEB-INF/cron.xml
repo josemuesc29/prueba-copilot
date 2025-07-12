@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+
+  <cron>
+    <url>/categoriesAndItems</url>
+    <target>cron</target>
+    <description>Update categories and item information everyday at 2:00am</description>
+    <timezone>America/Bogota</timezone>
+    <schedule>every day 02:00</schedule>
+  </cron>
+
+  <cron>
+    <url>/offersAndHighlights</url>
+    <target>cron</target>
+    <description>Update offers every 2 hours</description>
+    <timezone>America/Bogota</timezone>
+    <schedule>every 2 hours from 03:30 to 01:30</schedule>
+  </cron>
+
+  <!--
+  <cron>
+    <url>/cityUpload</url>
+    <target>cron</target>
+    <description>Update citites and store information</description>
+    <timezone>America/Bogota</timezone>
+    <schedule>every day 09:00</schedule>
+  </cron>
+  -->
+
+</cronentries>

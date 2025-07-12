@@ -1,0 +1,585 @@
+pipeline {
+  options { timestamps () }
+  environment {
+      GOOGLE_APPLICATION_CREDENTIALS = '/var/secrets/google/key.json'
+      TEST_PREFIX = "BACKEND-JOB-PRODUCCION"
+      TEST_CONTAINER = "${env.TEST_PREFIX}-${env.BUILD_NUMBER}"
+      PROJECT_ID="stunning-base-164402" 
+      PROJECT_NAME="ftd-cv-backend-auth-3.0-SNAPSHOT"
+      AUTOMATIZACION_URL = "https://www.farmatodo.com.co/"
+      // Produccion 
+      production='model/src/main/java/com/imaginamos/farmatodo/model/environment/Production.java'
+      qa='model/src/main/java/com/imaginamos/farmatodo/model/environment/QA.java'
+      //build gradle
+      build="build.gradle"
+      //URLConnections
+      connectionurl='model/src/main/java/com/imaginamos/farmatodo/model/util/URLConnections.java'
+      //appengine
+      config = 'src/main/webapp/WEB-INF/appengine-web.xml'
+      STACK_PREFIX = "Hola @canal, "
+      SLACK_TEAM_DOMAIN = "techfarmatodo"
+    //   SLACK_CHANNEL = "#devops-notification"        
+    //   SLACK_TOKEN_ID = 'slack-notification'
+      SLACK_CHANNEL = "#deploy-backend-devops"
+      SLACK_TOKEN_ID= 'deploy-backend-devops'
+    
+      //Opciones de despliegue
+      CANARY  = 'canary'
+      APROBADO = 'APROBADO'
+      NO_APROBADO = 'NO_APROBADO'
+      //Manejo de Trafico
+      SERVICE="default"
+      VERSION_CANARY="canary"
+      VERSION_NEW_PROD="production"
+      PORCENTAJE_CANARY_20=".2"
+      PORCENTAJE_CANARY_20_LABEL="20"
+      PORCENTAJE_CANARY_100_LABEL="100"
+      PORCENTAJE_CANARY_50=".5"
+      PORCENTAJE_CANARY_50_LABEL="50"
+      PORCENTAJE_PROD_90=".8"        
+      PORCENTAJE_PROD_100="1"
+  }
+
+  agent {
+        kubernetes {
+            label "backend-JOB"
+            defaultContainer "jnlp"
+            yaml """
+                apiVersion: v1
+                kind: Pod
+                metadata:
+                labels:
+                    application: jenkins
+                    component: customagent
+                spec:
+                 volumes:
+                 - name: gcp-jenkins-sa-key
+                   secret:
+                    namespace: jenkins
+                    secretName: gcp-jenkins-sa
+                    defaultMode: 0400
+                 containers:                 
+                 - name: compilador-bancken2
+                   image: gcr.io/devops-farmatodo/ftd-gcloud-gradle
+                   env:
+                   - name: GOOGLE_APPLICATION_CREDENTIALS
+                     value: /var/secrets/google/key.json
+                   volumeMounts:
+                     - name: gcp-jenkins-sa-key
+                       mountPath: "/var/secrets/google"
+                       readOnly: true                         
+                   command:
+                     - cat                 
+                   tty: true
+                 - name: gcloud
+                   image: gcr.io/cloud-builders/gcloud
+                   env:
+                   - name: GOOGLE_APPLICATION_CREDENTIALS
+                     value: /var/secrets/google/key.json  
+                   volumeMounts:
+                     - name: gcp-jenkins-sa-key
+                       readOnly: true
+                       mountPath: "/var/secrets/google"
+                   command:
+                     - cat
+                   tty: true
+                """
+        }
+    }     
+  stages {
+      stage ('Clonar repositorio backend') {
+          steps {
+              script{
+                  sh "echo 'Branch base deploy ${GIT_BRANCH}' " 
+                  sh 'echo "Clonando repositorio git@github.com:ftd-farmatodo/ftd-backend.git"' 
+                  git credentialsId: 'jenkins-deploy', branch: "${GIT_BRANCH}", url: 'git@github.com:ftd-farmatodo/ftd-backend.git'
+                  sh "echo 'Repositorio clonado: ${GIT_BRANCH}' " 
+              } 
+              script{
+                  def COMMITTER_PROJECT = sh (
+                      returnStdout: true,
+                      script: 'git --no-pager show -s --format=\'%ae\''
+                  ).trim()
+                      TAG_NAME = sh (
+                      returnStdout: true,
+                      script: 'git tag --points-at HEAD | awk NF'
+                  ).trim()
+                      imageTag_Prod = "gcr.io/${env.PROJECT_ID_PROD}/${env.JOB_NAME}:${env.TAG_NAME}"
+                  echo("Ultimo commit por: ${COMMITTER_PROJECT}")    
+                  env['COMMITTER_PROJECT'] = "${COMMITTER_PROJECT}"
+              }        
+          }            
+      } 
+      stage('Menu'){
+          steps{
+              script { 
+                  env.ambiente = input message: 'Please enter the AMBIENTE',
+                  parameters: [choice( choices: 'default\nqa-env\nqa-env1\nqa-env2\nprepro-qa-env3\nSANDBOX',defaultValue: 'Select', description: '',name: 'ambiente')]
+                  env.version= input message: 'Please enter the VERSION',parameters: [string(defaultValue: 'rfc-001',description: '',name: 'version')]
+                  env.GATEWAY_CO = input message: 'Please enter the GATEWAY_CO',parameters: [string(defaultValue: 'gateway-dot-stunning-base-164403.uc.r.appspot.com',description: '',name: 'GATEWAY_CO')]
+                  env.OMS_DIRECT = input message: 'Please enter the OMS_DIRECT',parameters: [string(defaultValue: 'oms-dot-stunning-base-164402.appspot.com',description: '',name: 'OMS_DIRECT')] 
+                  env.DTF_DIRECT = input message: 'Please enter the DTF_DIRECT',parameters: [string(defaultValue: 'datafoundation-dot-stunning-base-164402.uc.r.appspot.com',description: '',name: 'DTF_DIRECT')]                                                        
+                  env.CMS_DIRECT = input message: 'Please enter the CMS_DIRECT',parameters: [string(defaultValue: 'gateway-dot-stunning-base-164402.appspot.com',description: '',name: 'CMS_DIRECT')] 
+                  env.NEST_UTILITIES_DIRECT = input message: 'Please enter the NEST_UTILITIES_DIRECT',parameters: [string(defaultValue: 'utilities-dot-stunning-base-164402.uc.r.appspot.com',description: '',name: 'NEST_UTILITIES_DIRECT')]                               
+              }  
+          }
+      }
+      stage('Instalación del proyecto'){
+          steps{                
+              container("compilador-bancken2") {
+                  script{
+                      container("compilador-bancken2") {
+                      urlconnections( "${connectionurl}","Production.getInstance()")
+                      dir("backend"){
+                          if("${ambiente}"=='qa-env'){ 
+                              appengine("${config}","<service>qa-env</service>")
+                          }else if ("${ambiente}"=='qa-env1'){
+                          appengine("${config}","<service>qa-env1</service>")
+                          } else if ("${ambiente}"=='qa-env2'){
+                          appengine("${config}","<service>qa-env2</service>")
+                          } else if ("${ambiente}"=='qa-env3'){
+                          appengine("${config}","<service>qa-env3</service>")
+                          }   
+                      } 
+                      production("${production}","${env.GATEWAY_CO}","${env.OMS_DIRECT}","${env.DTF_DIRECT}","${env.CMS_DIRECT}","${env.NEST_UTILITIES_DIRECT}")
+                      } 
+                  }
+                  script{
+                      Services = input message: 'Se requiere elegir una opcion', ok: 'Lanzar!',
+                      parameters: [choice(name: 'RELEASE_SCOPE', choices: 'Select\nbackend\nbackendCron\nbackendFirebase\nbackendImages\nbackendMonitor\nbackendTasks',defaultValue: 'Select', description: 'La opcion "." es igual al pom rais del proyecto')]
+                  } 
+              
+              }
+          }
+      }
+      
+      stage('Cobertura de Codigo SonarQube') {
+          steps { 
+              withSonarQubeEnv('SonarQube') {
+                  container("compilador-bancken2") {
+                      //sh 'echo "Envia el reporte a sonar"'
+                      sh 'gradle sonarqube'                                                
+                  }
+              }
+          }
+      }
+      stage("Quality Gate"){
+          steps {
+              timeout(time: 1, unit: 'HOURS') { // Valida que las reglas de sonarqube se cumplan
+                  waitForQualityGate abortPipeline: true
+              }
+          }
+      }               
+      stage("Preparando Ambiente "){
+        steps{
+            script{
+                switch(Services) {
+                    case 'backend': 
+                    dir(Services){
+                        container("compilador-bancken2") {
+                        sh 'gradle clean build'
+                        }
+                    }
+                    break
+                }    
+            }
+            script{
+                dir(Services){
+                    container("compilador-bancken2") {
+                        builgradle("${build}","${env.VERSION_CANARY}","stunning-base-164402")
+                        deploy()
+                    }
+                }
+            }
+            script {
+                container("compilador-bancken2") {
+                    migraciónTrafico("${env.ambiente}")
+                }
+            }  
+        }
+        post{
+            success {
+                slackSend(
+                    tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                    teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                    token: "${env.SLACK_TOKEN_ID}",
+                    channel: "${env.SLACK_CHANNEL}",                    
+                    color: "#FF7F00",
+                    message: "${env.STACK_PREFIX} Se requiere aprobar de Split del *${env.PORCENTAJE_CANARY_20_LABEL}%* de tráfico a la versión *${env.VERSION_CANARY}*, Ir a-> <${env.BUILD_URL}|Check build> - ${TEST_CONTAINER}."
+                )
+            }
+        }
+      }
+
+      stage ('Aprobación de migración de 20% de tráfico') {
+        steps {                               
+            sh 'echo "Aprobación y entrada Manual"'
+            script {
+                MIGRACION_APROBADO = input(
+                    message: "Se requiere que Apruebe el split de ${env.PORCENTAJE_CANARY_20_LABEL}% de tráfico a la versión ${env.VERSION_CANARY} del Job ${env.TEST_CONTAINER}",
+                    parameters: [
+                            [$class: 'ChoiceParameterDefinition',
+                            choices: ["${APROBADO}","${NO_APROBADO}"].join('\n'),
+                            name: 'input',
+                            description: 'Menu - Seleccione una opción']
+                ])
+                echo "Seleccion: ${MIGRACION_APROBADO}"                   
+                env['MIGRACION_APROBADO'] = "${MIGRACION_APROBADO}"
+            }
+        }
+        post{
+          always {
+            slackSend(
+                tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                token: "${env.SLACK_TOKEN_ID}",
+                channel: "${env.SLACK_CHANNEL}",                    
+                color: "#FF7F00",
+                message: "${env.STACK_PREFIX} El split de tráfico del *${env.PORCENTAJE_CANARY_20_LABEL}%* de tráfico a la versión *${env.VERSION_CANARY}* fue: *${env.MIGRACION_APROBADO}* para la versión actual-> <${env.BUILD_URL}|Check build> - ${TEST_CONTAINER}."
+            )
+          }
+        }
+      }
+      stage('Validación split migración Canary'){            
+        when {
+            expression {
+                return "${env.MIGRACION_APROBADO}" == "${NO_APROBADO}"
+            }
+        }
+        steps {        
+            script {                               
+                script {                               
+                    sh 'echo "Se Notifica fallo de deploy en Producción"'
+                    currentBuild.result = 'FAILURE'                    
+                    sh "echo 'No se realiza ninguna acción sobre producción, versión: ${VERSION_NEW_PROD}' "
+                    error('No se aprueba el split de tráfico a canary')                    
+                }
+            }                
+        }
+        post{
+          success{
+            slackSend (
+                tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                token: "${env.SLACK_TOKEN}",
+                channel: "${env.SLACK_CHANNEL}, ${env.COMMITTER_EMAIL}",
+                color: "danger",
+                message: "${env.STACK_PREFIX} El despliegue del branch: *${GIT_BRANCH}*, finalizó *CON* errores: . <${env.DEPLOY_URL_SELENIUM}|Access service> - <${env.BUILD_URL}|Check build> - último commit por ${env.COMMITTER_PROJECT} - *${TEST_CONTAINER}*."
+            )
+          }
+        }
+      }
+      stage('Migracion de trafico 20% Canary - Progresivo') {
+        when {
+            expression {
+                return "${env.MIGRACION_APROBADO}" == "${APROBADO}"
+            }
+        }
+        steps {   
+            script{
+                container("gcloud") {  
+                    sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'       
+                    sh 'gcloud config set project stunning-base-164402'                             
+                    sh 'echo "Migracion de trafico Canary - Progresivo"'
+                    sh "gcloud app services set-traffic ${env.ambiente} --splits ${env.VERSION_CANARY}=.2,${env.DEPLOY_ENV}=.8 --split-by cookie --project=${PROJECT_ID}"
+                }
+            }  
+        }
+        post{
+          success {
+            slackSend(
+                tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                token: "${env.SLACK_TOKEN_ID}",
+                channel: "${env.SLACK_CHANNEL}",                    
+                color: "#FF7F00",
+                message: "${env.STACK_PREFIX} Se realizó split de tráfico entre las versiones *${VERSION_CANARY}* y *${env.DEPLOY_ENV}*, Ahora apruebe la migración del *100%* de tráfico a *${VERSION_CANARY}* para la version actual-> <${env.BUILD_URL}|Check build>, por favor validar logs: ${env.DEPLOY_URL} - *${TEST_CONTAINER}*."
+            )
+          }
+        }
+      }
+
+      stage ('Aprobación de migración de 100% de tráfico a Canary') {
+        steps {                               
+            script {
+                MIGRACION_APROBADO = input(
+                    message: "Se requiere que Apruebe la migración del 100% de tráfico a la versión ${VERSION_CANARY} del Job ${env.TEST_CONTAINER}",
+                    parameters: [
+                            [$class: 'ChoiceParameterDefinition', choices: ["${APROBADO}","${NO_APROBADO}"].join('\n'), name: 'input', description: 'Menu - Seleccione una opción']
+                ])
+                echo "Seleccion: ${MIGRACION_APROBADO}"                   
+                env['MIGRACION_APROBADO'] = "${MIGRACION_APROBADO}"
+            }
+        }
+        post{
+          always {
+            slackSend(
+                tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                token: "${env.SLACK_TOKEN_ID}",
+                channel: "${env.SLACK_CHANNEL}",                    
+                color: "#FF7F00",
+                message: "${env.STACK_PREFIX} La migración del *100%* de tráfico a la version *${VERSION_CANARY}* fué:  *${env.MIGRACION_APROBADO}* para la version actual-> <${env.BUILD_URL}|Check build> - *${TEST_CONTAINER}*."   
+            )
+          }
+        }
+      }
+      stage('Migracion de trafico 100% Canary') {
+        when {
+            expression {
+                return "${env.MIGRACION_APROBADO}" == "${APROBADO}"
+            }
+        }
+        steps {   
+            container("gcloud") {                               
+                sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'         
+                sh 'echo "Migracion de 100%  trafico Canary"'
+                sh "gcloud app services set-traffic ${env.ambiente} --splits ${VERSION_CANARY}=${PORCENTAJE_PROD_100} --split-by cookie --project=${PROJECT_ID}"                    
+            }
+        }
+        post{
+            success {
+                slackSend(
+                    tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                    teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                    token: "${env.SLACK_TOKEN_ID}",
+                    channel: "${env.SLACK_CHANNEL}",                    
+                    color: "#FF7F00",
+                    message: "${env.STACK_PREFIX} Se requiere aprobar del despliegue de pruduciion  en  versión *${env.version}*, Ir a-> <${env.BUILD_URL}|Check build>  - ${TEST_CONTAINER}."
+                )
+            }
+        }
+      }
+      stage('Validación migración Canary'){            
+        when {
+            expression {
+                return "${env.MIGRACION_APROBADO}" == "${NO_APROBADO}"
+            }
+        }
+        steps {        
+            script {                               
+                sh 'echo "Se Notifica fallo de deploy en Producción"'
+                currentBuild.result = 'FAILURE'                                      
+            }
+            container("gcloud") {                               
+                sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'         
+                sh "echo 'Se retorna el trafico a la version ${env.DEPLOY_ENV} de  ${env.ambiente}' "
+                sh "gcloud app services set-traffic ${env.ambiente} --splits ${env.DEPLOY_ENV}=${PORCENTAJE_PROD_100} --split-by cookie --project=${PROJECT_ID}"
+                error('No se aprueba la migración de tráfico a Canary') 
+            }
+        }
+      }
+      stage ('Aprobación deploy Producción') {
+        steps {                               
+            sh 'echo "Aprobación y entrada Manual"'
+            script {
+                DEPLOY_APROBADO = input(
+                    message: "Se requiere que Apruebe el despliegue en la versión ${env.version} del Job ${env.TEST_CONTAINER}",
+                    parameters: [
+                            [$class: 'ChoiceParameterDefinition', choices: ["${APROBADO}","${NO_APROBADO}"].join('\n'),
+                            name: 'input', description: 'Menu - Seleccione una opción']
+                ])                  
+                env['DEPLOY_APROBADO'] = "${DEPLOY_APROBADO}"
+            }
+        }
+        post{
+          always {
+            slackSend(
+                tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                token: "${env.SLACK_TOKEN_ID}",
+                channel: "${env.SLACK_CHANNEL}",                    
+                color: "#FF7F00",
+                message: "${env.STACK_PREFIX} El despliegue en Producción fué:  ${env.version} para la version actual-> <${env.BUILD_URL}|Check build> - *${TEST_CONTAINER}*."
+            )
+          }
+        }
+      }
+      stage('Despliegue en Producción') {   
+         when {
+            expression {
+                return "${env.DEPLOY_APROBADO}" == "${APROBADO}"
+            }
+        }        
+        steps {        
+            script{
+                dir(Services){
+                    container("compilador-bancken2") {
+                        builgradle("${build}","${env.version}","stunning-base-164402")
+                        deploy()
+                    }
+                }
+            } 
+        }
+      }
+      stage('Validación despliegue a producción Aprobado'){            
+        when {
+            expression {
+                return "${env.DEPLOY_APROBADO}" == "${NO_APROBADO}"
+            }
+        }
+        steps {        
+            script {                               
+                sh 'echo "Se Notifica fallo de deploy en Producción"'
+                currentBuild.result = 'FAILURE'                                      
+            }
+            container("gcloud") {                               
+                sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'         
+                sh "echo 'Se retorna el trafico a la version ${env.DEPLOY_ENV} de  ${env.ambiente}' "
+                sh "gcloud app services set-traffic ${env.ambiente} --splits ${env.DEPLOY_ENV}=${PORCENTAJE_PROD_100} --split-by cookie --project=${PROJECT_ID}"
+                error('No se aprueba la migración de tráfico a Canary') 
+            }
+        }
+        post{
+          always {
+            always {
+                slackSend(
+                    tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                    teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                    token: "${env.SLACK_TOKEN_ID}",
+                    channel: "${env.SLACK_CHANNEL}",                    
+                    color: "#FF7F00",
+                    message: "${env.STACK_PREFIX} Se requiere aprobación para realizar la migración del 100% de tráfico a la versión de producción: ${env.DEPLOY_ENV} para la versión actual-> <${env.BUILD_URL}|Check build> - *${TEST_CONTAINER}*."
+                )                    
+            }
+          }
+        }
+      }
+      stage ('Aprobación migración Producción') {
+          steps {                               
+              script {
+                  MIGRACION_DEPLOY_APROBADO = input(
+                      message: "Se requiere que apruebe la migración de tráfico del *100%* a la versión: *${VERSION_NEW_PROD}* del Job ${env.TEST_CONTAINER}",
+                      parameters: [
+                              [$class: 'ChoiceParameterDefinition', choices: ["${APROBADO}","${NO_APROBADO}"].join('\n'),
+                              name: 'input', description: 'Menu - Seleccione una opción']
+                  ])                 
+                  env['MIGRACION_DEPLOY_APROBADO'] = "${MIGRACION_DEPLOY_APROBADO}"
+              }
+          }
+          post{
+            always {
+              slackSend(
+                  tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                  teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                  token: "${env.SLACK_TOKEN_ID}",
+                  channel: "${env.SLACK_CHANNEL}",                    
+                  color: "#FF7F00",
+                  message: "${env.STACK_PREFIX} La migración de tráfico a la version Producción *${env.ambiente}* fué: *${env.MIGRACION_DEPLOY_APROBADO}* para la versión actual-> <${env.BUILD_URL}|Check build> - *${TEST_CONTAINER}*."
+              )
+            }
+          }
+      }
+      stage('Migracion de trafico Producción') {
+        when {
+            expression {
+                return "${env.MIGRACION_DEPLOY_APROBADO}" == "${APROBADO}"
+            }
+        }
+        steps {   
+            container("gcloud") {                               
+                sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'         
+                sh 'echo "Migracion de trafico Producción"'
+                sh "gcloud app services set-traffic ${env.ambiente} --splits ${env.version}=${PORCENTAJE_PROD_100} --split-by cookie --project=${PROJECT_ID}"
+            }
+        }
+        post{
+          success {
+            slackSend(
+                tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                token: "${env.SLACK_TOKEN_ID}",
+                channel: "${env.SLACK_CHANNEL}",                    
+                color: "good",
+                message: "${env.STACK_PREFIX} Se realizó migración de tráfico a la versión: *${env.ambiente}*, El despliegue actual a finalizado *exitosamente*. <${env.BUILD_URL}|Check build>,   *${TEST_CONTAINER}*."
+            )
+          }
+        }
+      }
+      stage('Validacion Migracion Producción'){            
+          when {
+              expression {
+                  return "${env.MIGRACION_DEPLOY_APROBADO}" == "${NO_APROBADO}"
+              }
+          }
+          steps {        
+              script {                               
+                  sh 'echo "Se Notifica fallo de deploy en Producción"'
+                  currentBuild.result = 'FAILURE'                                      
+              }
+              container("gcloud") {                               
+                  sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'         
+                  sh "echo 'Se retorna el trafico a la version ${env.DEPLOY_ENV} de  ${env.ambiente}' "
+                  sh "gcloud app services set-traffic ${env.ambiente} --splits ${env.DEPLOY_ENV}=${PORCENTAJE_PROD_100} --split-by cookie --project=${PROJECT_ID}"
+                  error('No se aprueba la migración de tráfico a Canary') 
+              }
+          }
+      }
+  }
+
+  post {
+        success {
+            slackSend(
+                    tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                    teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                    token: "${env.SLACK_TOKEN}",
+                    channel: "${env.SLACK_CHANNEL}, ${env.COMMITTER_EMAIL}",                    
+                    color: "good",
+                    message: "${env.STACK_PREFIX} *${env.TEST_CONTAINER}*, branch: *${GIT_BRANCH}*,  finalizó *SIN* Errores-> <${env.DEPLOY_URL}|Access service> - <${env.BUILD_URL}|Check build> - último commit por ${env.COMMITTER_PROJECT}"
+            )
+        }
+        failure {
+            slackSend (
+                    tokenCredentialId: "${env.SLACK_TOKEN_ID}",
+                    teamDomain: "${env.SLACK_TEAM_DOMAIN}",
+                    token: "${env.SLACK_TOKEN}",
+                    channel: "${env.SLACK_CHANNEL}, ${env.COMMITTER_EMAIL}",
+                    color: "danger",
+                    message: "${env.STACK_PREFIX} *${env.TEST_CONTAINER}*, branch: ${GIT_BRANCH}, finalizó *CON* errores-> <${env.BUILD_URL}|Check build> - último commit por ${env.COMMITTER_PROJECT}"
+            )
+        }
+    }
+}
+
+def builgradle(String build , String version, String admin) {
+  def data = readFile(file: "${build}")
+  if ("${version}"== "canary"){
+    def test = data.replace('version-00',"${version}").replace('stunning-base-164402',"${admin}")
+    writeFile file:"${build}", text: test
+  }else{
+    def test = data.replace('canary',"${version}").replace('stunning-base-164402',"${admin}")
+    writeFile file:"${build}", text: test
+  }
+  
+}
+def urlconnections(String connectionurl ,String ambiente) {
+  def data = readFile(file: "${connectionurl}")
+  def test = data.replace('Production.getInstance()',"${ambiente}")
+  writeFile file:"${connectionurl}", text: test
+} 
+def production(String API_GATEWAY , String GATEWAY_CO, String OMS_DIRECT, String DTF_DIRECT, String CMS_DIRECT ,String NEST_UTILITIES_DIRECT){
+  def data = readFile(file: "${API_GATEWAY}")
+    def test = data.replace('https://gateway-dot-stunning-base-164402.uc.r.appspot.com/', "https://${GATEWAY_CO}/").replace('https://cms-dot-stunning-base-164402.appspot.com/', "https://${CMS_DIRECT}/").replace('https://sessionid-dot-utilities-dot-stunning-base-164402.uc.r.appspot.com/', "https://${NEST_UTILITIES_DIRECT}/")
+    writeFile file:'model/src/main/java/com/imaginamos/farmatodo/model/environment/Production.java', text: test
+}
+def appengine(String config ,String service ) {
+  def data = readFile(file: "${config}")
+  def test = data.replace('<!--<service>qa-env</service>-->',"${service}").replace('<max-instances>100</max-instances>',"<max-instances>5</max-instances>")
+  writeFile file:"${config}", text: test
+}
+def migraciónTrafico(String CHOICE){
+   sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'       
+    sh 'gcloud config set project stunning-base-164402'
+    def jsonObj = sh(script: "gcloud app versions list --service=${CHOICE} --hide-no-traffic --format='json'", returnStdout: true)
+    def foo = readJSON text: "$jsonObj"
+    for (String version : foo.id){
+       env['DEPLOY_ENV'] = "$version" 
+    }
+}
+def deploy(){
+  sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'
+  sh 'gcloud components install app-engine-java'
+  sh 'gcloud config set project stunning-base-164402'
+  sh 'gcloud config list'
+  sh 'gradle appengineDeploy'
+}

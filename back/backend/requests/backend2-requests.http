@@ -1,0 +1,174 @@
+### notify service test
+POST {{URL_BASE}}/_ah/api/orderEndpoint/v2/pushNotify
+Content-Type: application/json
+
+{
+  "message": "Prueba Notify",
+  "idUser": 143449,
+  "title": "title test"
+}
+
+### validate coupon source
+POST {{URL_BASE}}_ah/api/couponEndpoint/validateCoupon?key=AIzaSyAidR6Tt0K60gACR78aWThMQb7L5u6Wpag
+source: WEB
+country: COL
+Content-Type: application/json
+
+{
+  "name": "SERVIENTREGA5K",
+  "idCustomerWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiRmNDUwZjMzYi1lMDE4LTQ1ZjItOTVlOC03M2NkODNmOWY1Y2IM",
+  "token": "866438fc8f1b134152a54eb3e8da14c9",
+  "tokenIdWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiRmNDUwZjMzYi1lMDE4LTQ1ZjItOTVlOC03M2NkODNmOWY1Y2IMCxIFVG9rZW4iJDVhNTQ3ZDYwLWU2Y2UtNDkyZS1iZDdhLWJiZWJhMDA5MzdmMww"
+}
+
+###
+
+
+
+
+### coupons
+GET {{URL_BASE}}_ah/api/couponEndpoint/v1/coupons?idCustomerWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiRmNDUwZjMzYi1lMDE4LTQ1ZjItOTVlOC03M2NkODNmOWY1Y2IM&token=866438fc8f1b134152a54eb3e8da14c9&tokenIdWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiRmNDUwZjMzYi1lMDE4LTQ1ZjItOTVlOC03M2NkODNmOWY1Y2IMCxIFVG9rZW4iJDVhNTQ3ZDYwLWU2Y2UtNDkyZS1iZDdhLWJiZWJhMDA5MzdmMww&key=AIzaSyAidR6Tt0K60gACR78aWThMQb7L5u6Wpag
+source: WEB
+country: COL
+Content-Type: application/json
+
+###
+
+
+
+
+
+###
+#
+# Validate Coupon / Crea y valida el cupon al carrito del susuario
+POST {{URL_BASE}}/_ah/api/couponEndpoint/validateCoupon?key=AIzaSyAidR6Tt0K60gACR78aWThMQb7L5u6Wpag
+Content-Type: application/json
+
+{
+  "name": "hola",
+  "idCustomerWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiQzOGYwOTJiMC0yZWY2LTQ1OTctODMyYy05OTNhNjc0ZGEwYWIM",
+  "token": "ce35a20a5465db2791ad36db4643e09d",
+  "tokenIdWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiQzOGYwOTJiMC0yZWY2LTQ1OTctODMyYy05OTNhNjc0ZGEwYWIMCxIFVG9rZW4iJGIwNmE2NDc1LTQ2ZmItNDBmMy1iMmY5LTc2NWFlMTM4NjEwNww"
+}
+
+### detail coupon.
+
+GET {{URL_BASE}}/_ah/api/couponEndpoint/v1/coupon/detail?couponName=HOLA
+Content-Type: application/json
+
+
+#CUPONERA
+### /couponEndpoint/v1/coupons
+
+GET {{URL_BASE}}/_ah/api/couponEndpoint/v1/coupons?token=ce35a20a5465db2791ad36db4643e09d&idCustomerWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiQzOGYwOTJiMC0yZWY2LTQ1OTctODMyYy05OTNhNjc0ZGEwYWIM&tokenIdWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiQzOGYwOTJiMC0yZWY2LTQ1OTctODMyYy05OTNhNjc0ZGEwYWIMCxIFVG9rZW4iJGIwNmE2NDc1LTQ2ZmItNDBmMy1iMmY5LTc2NWFlMTM4NjEwNww
+Content-Type: application/json
+
+### GET /couponEndpoint/v1/coupons with name
+GET {{URL_BASE}}/_ah/api/couponEndpoint/v1/coupons?token=ce35a20a5465db2791ad36db4643e09d&idCustomerWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiQzOGYwOTJiMC0yZWY2LTQ1OTctODMyYy05OTNhNjc0ZGEwYWIM&tokenIdWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiQzOGYwOTJiMC0yZWY2LTQ1OTctODMyYy05OTNhNjc0ZGEwYWIMCxIFVG9rZW4iJGIwNmE2NDc1LTQ2ZmItNDBmMy1iMmY5LTc2NWFlMTM4NjEwNww
+Content-Type: application/json
+
+
+
+#### SECURITY
+# get order
+GET {{URL_BASE}}/_ah/api/orderEndpoint/getOrder?0=1&1=0&2=8&3=9&4=5&5=6&6=2&7=5&idOrder=9725708&tokenIdWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiRkMjNjNThiMC1jNWU0LTQ0NGYtYjE1Yy02Mjc1NjA1YmFiZTgMCxIFVG9rZW4iJGZjZTNiYmJmLTFjMjgtNDA1OS05YjNiLWFkYzJiMTcxNmNhNAw&token=32c7ba02342570ce8f2286a1bb4003d1&key=AIzaSyCUq3JkyEgJ2WJuTj-KQyaQXgY59d8z4MQ&idCustomerWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiQyYzcxZGU0Ny05M2UyLTRkYzMtODc4MS05NWEwYWViOTQ1NTEM
+accept: application/json, text/plain, */*
+country: COL
+sec-ch-ua-mobile: ?0
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
+source: ANDROID
+Content-Type: application/json
+
+### getCustomerLoginV2
+POST {{URL_BASE}}/_ah/api/customerEndpoint/getCustomerLoginV2?key=AIzaSyCUq3JkyEgJ2WJuTj-KQyaQXgY59d8z4MQ
+country: COL
+user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36 Edg/91.0.864.59
+source: WEB
+Content-Type: application/json
+
+{
+  "phone": 573017510346
+}
+
+### paymentMethods v2 provisional [v1 mejorado]
+POST https://qa-env-dot-stunning-base-164402.uc.r.appspot.com/_ah/api/orderEndpoint/v2/getPaymentMethod
+Accept: application/json, text/plain, */*
+source: ANDROID
+version: 2.6.8
+Content-Type: application/json
+
+{
+  "id": 733517,
+  "idCustomerWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiRlZTJhYzI0ZC00MWEzLTQ3NDQtYWFjNy0yNTUzMTVmMGNjN2YM",
+  "token": {
+    "token": "952c1645e3c8f90d8e01ae018913e302",
+    "tokenIdWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiRlZTJhYzI0ZC00MWEzLTQ3NDQtYWFjNy0yNTUzMTVmMGNjN2YMCxIFVG9rZW4iJDcxMjU5MzgwLTBjYWItNGU4YS04ZDA5LWZmMGU2OGU4OWVjNAw"
+  },
+  "idStoreGroup": 26,
+  "deliveryType": "EXPRESS"
+}
+
+### paymentMethods v2
+POST https://qa-env-dot-stunning-base-164402.uc.r.appspot.com/_ah/api/orderEndpoint/v2/paymentMethods
+Accept: application/json, text/plain, */*
+source: ANDROID
+version: 2.6.8
+Content-Type: application/json
+
+{
+  "id": 733517,
+  "idCustomerWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiRlZTJhYzI0ZC00MWEzLTQ3NDQtYWFjNy0yNTUzMTVmMGNjN2YM",
+  "token": {
+    "token": "952c1645e3c8f90d8e01ae018913e302",
+    "tokenIdWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiRlZTJhYzI0ZC00MWEzLTQ3NDQtYWFjNy0yNTUzMTVmMGNjN2YMCxIFVG9rZW4iJDcxMjU5MzgwLTBjYWItNGU4YS04ZDA5LWZmMGU2OGU4OWVjNAw"
+  },
+  "idStoreGroup": 26,
+  "deliveryType": "EXPRESS"
+}
+
+### cordinates validateStoreByCoordinates
+POST https://sg2-3609-dot-stunning-base-164402.uc.r.appspot.com/_ah/api/locationEndpoint/validateStoreByCoordinates?key=AIzaSyCUq3JkyEgJ2WJuTj-KQyaQXgY59d8z4MQ
+country: COL
+Content-Type: application/json
+
+{
+  "latitude": 4.722778,
+  "longitude": -74.046304
+}
+
+###4.740010, -74.039445
+
+### filters
+
+GET https://filters-dot-qa-env-dot-stunning-base-164402.uc.r.appspot.com/_ah/api/productEndpoint/v2/getItem?source=RESPONSIVE&idItem=1017701&idCustomerWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiQyYzcxZGU0Ny05M2UyLTRkYzMtODc4MS05NWEwYWViOTQ1NTEM&idStoreGroup=26&token=b08c3db75a7439dfcfebc5e454a154fb&tokenIdWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiQyYzcxZGU0Ny05M2UyLTRkYzMtODc4MS05NWEwYWViOTQ1NTEMCxIFVG9rZW4iJGFkODM4Y2ZkLWM1OTQtNDg1Ni1hMzFjLTU5NjRhNmZjYjEyMAw&key=AIzaSyAidR6Tt0K60gACR78aWThMQb7L5u6Wpag
+Content-Type: application/json
+
+### SEO v2 Data
+
+GET https://seo-dot-qa-env-dot-stunning-base-164402.uc.r.appspot.com/_ah/api/algolia/getSeoTest
+Content-Type: application/json
+
+
+### get categories and subcategories
+
+GET https://seo-dot-qa-env-dot-stunning-base-164402.uc.r.appspot.com/_ah/api/categoryEndpoint/getCategoriesAndSubCategories?token=7a678a72d8d1829e8535b2b57d3fa4a0&tokenIdWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiRiN2Q1YjE3Ni01NTg0LTRiYWItYjhkZS1iZGEwOTk4NTc0ZDYMCxIFVG9rZW4iJGJjNjQwZWQzLWFhMjgtNDJiYy1iMmZkLTAyNGZiYzg4NTEyZgw
+accept-language: en-US,en;q=0.9,es;q=0.8
+Content-Type: application/json
+
+###
+
+GET https://multicountry-apigateway-dot-stunning-base-164402.uc.r.appspot.com/_ah/api/productEndpoint/v2/getItem?source=WEB&idItem=103262257&idCustomerWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAyci4LEgRVc2VyIiQwNWIzYTA2Ny1iMDMyLTQ3MGYtOTI3My0wZTgwOTdmMDE4MzMM&idStoreGroup=26&token=6d5757b78c5fb37a854513d0af90bfee&tokenIdWebSafe=ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiQwNWIzYTA2Ny1iMDMyLTQ3MGYtOTI3My0wZTgwOTdmMDE4MzMMCxIFVG9rZW4iJDM2NzU5NjViLWMzYTctNDAxYy1iODNjLTAxYjAwMDdkMjQzOQw&key=AIzaSyAidR6Tt0K60gACR78aWThMQb7L5u6Wpag
+source: WEB
+country: COL
+Content-Type: application/json
+
+###
+
+
+
+
+
+
+
+
+

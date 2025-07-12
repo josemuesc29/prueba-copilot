@@ -1,0 +1,78 @@
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// [START buildscript]
+buildscript {    // Configuration for building
+    repositories {
+        mavenCentral()
+        jcenter()    // Bintray's repository - a fast Maven Central mirror & more
+    }
+    dependencies {
+        // App Engine Gradle plugin
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.8.1'
+    }
+}
+// [END buildscript]
+
+repositories {   // repositories for Jar's you access in your code
+    mavenCentral()
+    jcenter()
+}
+
+apply plugin: 'java'                              // standard Java tasks
+apply plugin: 'war'                               // standard Web Archive plugin
+
+// [START apply_plugins]
+apply plugin: 'com.google.cloud.tools.appengine'
+// [END apply_plugins]
+
+dependencies {
+    providedCompile group: 'javax.servlet', name: 'servlet-api', version:'2.5'
+    implementation 'jstl:jstl:1.2'
+    implementation group: 'javax.inject', name: 'javax.inject', version: '1'
+    implementation group: 'com.google.appengine', name: 'appengine-api-1.0-sdk', version: '1.9.76'
+
+    // Uncomment to use Endpoints Frameworks v1.0 and comment the v2.0 section
+    // implementation group: 'com.google.appengine', name: 'appengine-endpoints', version: '+'
+    // End of Endpoints Frameworks v1.0
+
+    // Endpoints Frameworks v2.0
+    // [START endpoints-tools]
+    implementation group: 'com.google.endpoints', name: 'endpoints-framework', version: '2.0.8'
+
+    implementation 'com.google.http-client:google-http-client:1.20.0'
+    implementation 'com.google.cloud:gcloud-java-storage:0.2.6'
+    implementation 'com.google.appengine:appengine-testing:2.0.30'
+    implementation 'com.google.appengine:appengine-api-labs:1.9.46'
+    implementation 'com.google.apis:google-api-services-plus:v1-rev509-1.22.0'
+    implementation 'com.google.apis:google-api-services-oauth2:v1-rev129-1.22.0'
+    implementation 'com.google.firebase:firebase-admin:5.5.0'
+    implementation 'javax.servlet:servlet-api:2.5'
+    implementation project(':model')
+    // [END endpoints-tools]
+    // End of Endpoints Frameworks v2.0
+}
+
+appengine {  // App Engine tasks configuration
+
+    deploy {   // deploy configuration
+        stopPreviousVersion = false  // default - stop the current version
+        promote = true              // default - & make this the current version
+        version = "dev"
+    }
+}
+
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17

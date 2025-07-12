@@ -1,0 +1,22 @@
+{
+  "id": 29620,
+  "firstName": "David Stiven",
+  "lastName": "Avila Gonzalez",
+  "gender": "F",
+  "countryId": "CO",
+  "addresses": [
+    {
+      "nickname": "prueba",
+      "city": "BOG",
+      "address": "diagonal 47 # 77 b 09",
+      "comments": "prueba",
+      "newAddress": true
+    }
+  ],
+  "phone": "573167544298",
+  "profileImageUrl": null,
+  "token": {
+    "token": "7106602ebafc1dde02e2828665cabe45",
+    "tokenIdWebSafe": "ahZzfnN0dW5uaW5nLWJhc2UtMTY0NDAycl0LEgRVc2VyIiQ3YmFhOTk1ZC1kNmJjLTRkOWQtYTgyMS0yY2UyOWU3NTQ2NTAMCxIFVG9rZW4iJDVhMDcxNzM5LWE1MDgtNGRkMC1hZjlhLTRlNzdiMTU5MjAxYQw"
+  }
+}

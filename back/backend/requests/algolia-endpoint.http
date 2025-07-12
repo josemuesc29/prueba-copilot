@@ -1,0 +1,13 @@
+### getDeliveryTimeLabelConfig
+GET {{URL_BASE}}_ah/api/algoliaEndpoint/getDeliveryTimeLabelConfig
+
+### testAlgoliaCache
+GET {{URL_BASE}}_ah/api/algoliaEndpoint/testAlgoliaCache
+
+### refreshProperty
+POST {{URL_BASE}}_ah/api/algoliaEndpoint/refreshProperty
+Content-Type: application/json
+
+{
+  "objectId": "CONFIG_SELF_CHECKOUT"
+}

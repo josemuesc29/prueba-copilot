@@ -1,0 +1,29 @@
+steps:
+  # Install dependencies
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        RESPONSE=$(curl --request POST \
+                  --url https://hooks.slack.com/services/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 \
+                  --header 'Content-type: application/json' \
+                  --data '{
+                          	"blocks": [
+                          		{
+                          			"type": "divider"
+                          		},
+                          		{
+                          			"type": "section",
+                          			"text": {
+                          				"type": "plain_text",
+                          				"text": ":1446-pepebubzfacespin: :flag-ve: @canal Se actualiza el proyecto -> ${REPO_NAME}, Rama -> ${BRANCH_NAME} \n Mensaje: ${_COMMIT_MESSAGE} \n Autor: ${_COMMIT_USER} ",
+                          				"text": ":1446-pepebubzfacespin: :flag-co:  @canal Se actualiza el proyecto -> ${REPO_NAME}, Rama -> ${BRANCH_NAME} \n Mensaje: ${_COMMIT_MESSAGE} \n Autor: ${_COMMIT_USER} ",
+                          				"emoji": true
+                          			}
+                          		},
+                          		{
+                          			"type": "divider"
+                          		}
+                          	]
+                          }')

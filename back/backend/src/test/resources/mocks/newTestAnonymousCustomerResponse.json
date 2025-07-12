@@ -1,0 +1,537 @@
+{
+  "id": 0,
+  "idCustomerWebSafe": null,
+  "firstName": "Cliente",
+  "lastName": "Anónimo",
+  "gender": "F",
+  "documentNumber": 0,
+  "documentType": "1",
+  "country": "CO",
+  "city": null,
+  "token": null,
+  "latitude": null,
+  "longitude": null,
+  "idStoreGroup": 23,
+  "shopingCartNumber": 0,
+  "banners": [],
+  "suggestedProducts": [
+    {
+      "id": "478",
+      "firstDescription": "30% Dcto desodorantes Nivea",
+      "secondDescription": null,
+      "urlImage": "https://lh3.googleusercontent.com/duf6Xu9UdTmxBUpVy_m2ZwMKU4CqMUgnsWHBEUy7DbTZOfJTcSfoG36kNajMXihqHXvgUoUc3iAp5irxho4rsHxniO4Jv80u_cE",
+      "startDate": 1502600400000,
+      "endDate": 1503205140000,
+      "items": [
+        {
+          "item": 1003617
+        },
+        {
+          "item": 1011014
+        },
+        {
+          "item": 1028277
+        },
+        {
+          "item": 1028278
+        },
+        {
+          "item": 1032109
+        },
+        {
+          "item": 1032110
+        },
+        {
+          "item": 1032111
+        },
+        {
+          "item": 1034010
+        },
+        {
+          "item": 1034011
+        },
+        {
+          "item": 1036161
+        },
+        {
+          "item": 1038290
+        },
+        {
+          "item": 1038291
+        },
+        {
+          "item": 1038292
+        },
+        {
+          "item": 1038295
+        },
+        {
+          "item": 1042901
+        },
+        {
+          "item": 1042902
+        },
+        {
+          "item": 1042903
+        },
+        {
+          "item": 1042904
+        },
+        {
+          "item": 1042905
+        },
+        {
+          "item": 1042906
+        },
+        {
+          "item": 1047495
+        },
+        {
+          "item": 1047496
+        },
+        {
+          "item": 1051072
+        },
+        {
+          "item": 1054609
+        },
+        {
+          "item": 1054610
+        },
+        {
+          "item": 1054635
+        }
+      ],
+      "type": "GROUP",
+      "product": null,
+      "orderingNumber": 100
+    },
+    {
+      "id": "479",
+      "firstDescription": "25% dcto Oral-B",
+      "secondDescription": null,
+      "urlImage": "https://lh3.googleusercontent.com/6X0Twj5d8PcHtHCSne6_m8w2Ap4bxT-TM-vfGG8vIu5dIK2PUMBmmi6UhM-If1keFdui_WzmXCgQleqMCUHd7pI_--EkNOliPpg",
+      "startDate": 1502600400000,
+      "endDate": 1503205140000,
+      "items": [
+        {
+          "item": 1008933
+        },
+        {
+          "item": 1008938
+        },
+        {
+          "item": 1008974
+        },
+        {
+          "item": 1008978
+        },
+        {
+          "item": 1008999
+        },
+        {
+          "item": 1009072
+        },
+        {
+          "item": 1009074
+        },
+        {
+          "item": 1009075
+        },
+        {
+          "item": 1009077
+        },
+        {
+          "item": 1010664
+        },
+        {
+          "item": 1018933
+        },
+        {
+          "item": 1018934
+        },
+        {
+          "item": 1018935
+        },
+        {
+          "item": 1024826
+        },
+        {
+          "item": 1026398
+        },
+        {
+          "item": 1026399
+        },
+        {
+          "item": 1031763
+        },
+        {
+          "item": 1031764
+        },
+        {
+          "item": 1033530
+        },
+        {
+          "item": 1035639
+        },
+        {
+          "item": 1035640
+        },
+        {
+          "item": 1039193
+        },
+        {
+          "item": 1041387
+        },
+        {
+          "item": 1041391
+        },
+        {
+          "item": 1042050
+        },
+        {
+          "item": 1044299
+        },
+        {
+          "item": 1044300
+        },
+        {
+          "item": 1044498
+        },
+        {
+          "item": 1045561
+        },
+        {
+          "item": 1047471
+        },
+        {
+          "item": 1048787
+        },
+        {
+          "item": 1048789
+        },
+        {
+          "item": 1048790
+        },
+        {
+          "item": 1050342
+        },
+        {
+          "item": 1050437
+        },
+        {
+          "item": 1050438
+        },
+        {
+          "item": 1052880
+        },
+        {
+          "item": 1052881
+        },
+        {
+          "item": 1052882
+        },
+        {
+          "item": 1052888
+        },
+        {
+          "item": 1053583
+        },
+        {
+          "item": 1053586
+        },
+        {
+          "item": 1053613
+        }
+      ],
+      "type": "GROUP",
+      "product": null,
+      "orderingNumber": 100
+    },
+    {
+      "id": "487",
+      "firstDescription": "25% dcto Capilar Elvive",
+      "secondDescription": null,
+      "urlImage": "https://lh3.googleusercontent.com/Eegf1UFuL0ZqIOtLfan5E1S7a4avAyzhrH0U6SMJXtXujpvyrHnHf2I01Sa3JWMgPngl9jXmwEqA4YBU_clXI_HGPiB52epW21E",
+      "startDate": 1502600400000,
+      "endDate": 1503205140000,
+      "items": [
+        {
+          "item": 1018202
+        },
+        {
+          "item": 1027867
+        },
+        {
+          "item": 1031938
+        },
+        {
+          "item": 1038570
+        },
+        {
+          "item": 1041557
+        },
+        {
+          "item": 1041558
+        },
+        {
+          "item": 1041889
+        },
+        {
+          "item": 1043309
+        },
+        {
+          "item": 1043310
+        },
+        {
+          "item": 1043312
+        },
+        {
+          "item": 1045430
+        },
+        {
+          "item": 1045432
+        },
+        {
+          "item": 1045433
+        },
+        {
+          "item": 1045435
+        },
+        {
+          "item": 1047088
+        },
+        {
+          "item": 1047089
+        },
+        {
+          "item": 1047092
+        },
+        {
+          "item": 1047421
+        },
+        {
+          "item": 1050310
+        },
+        {
+          "item": 1050311
+        },
+        {
+          "item": 1050313
+        },
+        {
+          "item": 1051561
+        },
+        {
+          "item": 1051562
+        },
+        {
+          "item": 1051564
+        },
+        {
+          "item": 1053338
+        }
+      ],
+      "type": "GROUP",
+      "product": null,
+      "orderingNumber": 100
+    },
+    {
+      "id": "488",
+      "firstDescription": "50% dcto 2da Unid Club Social",
+      "secondDescription": null,
+      "urlImage": "https://lh3.googleusercontent.com/cYC_Ga-9Mhf5lJe_U6E6M9x0ffppUPANLXm5DPs1ru6gFXyZ0a23gAx8BinJ2Fe2otmitr1MJbwTUCKwQCdZyfh9jmdcrJVyFA",
+      "startDate": 1502600400000,
+      "endDate": 1503205140000,
+      "items": [
+        {
+          "item": 1027884
+        },
+        {
+          "item": 1027885
+        },
+        {
+          "item": 1027966
+        },
+        {
+          "item": 1027967
+        },
+        {
+          "item": 1051493
+        },
+        {
+          "item": 1051494
+        },
+        {
+          "item": 1051495
+        },
+        {
+          "item": 1051496
+        }
+      ],
+      "type": "GROUP",
+      "product": null,
+      "orderingNumber": 100
+    },
+    {
+      "id": "474",
+      "firstDescription": "Oferta Shampoo Johnson's Baby 400ml + 200 ml ",
+      "secondDescription": null,
+      "urlImage": "https://lh3.googleusercontent.com/KZ05jCZH203NI2Oj-sivPnwnZavT2EzQWdUVmIf11NBjOTHUFbg4ei2QTjO_84El-z20QupL6U-IzpA7r9NDuEEbnCE0rHJUnOw",
+      "startDate": 1502600400000,
+      "endDate": 1503205140000,
+      "items": [
+        {
+          "item": 1034522
+        },
+        {
+          "item": 1034523
+        },
+        {
+          "item": 1034524
+        }
+      ],
+      "type": "GROUP",
+      "product": null,
+      "orderingNumber": 100
+    }
+  ],
+  "previousItems": null,
+  "highlightedItems": [],
+  "addresses": [
+    {
+      "idCustomer": null,
+      "idAddress": 1517,
+      "city": "BAR",
+      "address": "CARRERA 39 # 75 B - 38",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 50,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1652,
+      "city": "BOG",
+      "address": "Calle 135 A 9B-41",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 9,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1664,
+      "city": "BOG",
+      "address": "Calle 67 a sur # 64-81 isla del sol",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 23,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1264,
+      "city": "BOG",
+      "address": "Carrera 11 #99-21",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 26,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1660,
+      "city": "BOG",
+      "address": "Carrera 13 A No 29 – 24 Bogota",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 27,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1654,
+      "city": "BOG",
+      "address": "calle 21 sur 51f 65",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 40,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1657,
+      "city": "BOG",
+      "address": "calle 93a No.19-39",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 20,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1524,
+      "city": "BOG",
+      "address": "carrera 56 # 152-37",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 14,
+      "deliveryType": null
+    },
+    {
+      "idCustomer": null,
+      "idAddress": 1661,
+      "city": "BOG",
+      "address": "cra 5 # 57-14 apto 806",
+      "address2": null,
+      "latitude": 4.673045,
+      "longitude": -74.058331,
+      "comments": null,
+      "nickname": null,
+      "newAddress": null,
+      "closerStoreId": 7,
+      "deliveryType": null
+    }
+  ],
+  "email": "cliente.anonimo@farmatodo.com",
+  "phone": "000000000",
+  "components": null,
+  "suggested": null,
+  "purchases": null,
+  "creditCards": null,
+  "profileImageUrl": null,
+  "registeredBy": "EMAIL"
+}

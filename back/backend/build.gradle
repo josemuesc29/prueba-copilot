@@ -1,0 +1,241 @@
+/// GITHUB
+apply plugin: "org.sonarqube"
+apply plugin: 'jacoco'
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Admin API
+//def projectId = 'sandbox-domicilios-farmatodo'
+//def projectId = 'dev-domicilios-farmatodo'
+def projectId = 'stunning-base-164402'
+
+// [START buildscript]
+buildscript {    // Configuration for building
+    repositories {
+        mavenCentral()
+        jcenter()    // Bintray's repository - a fast Maven Central mirror & more
+    }
+    dependencies {
+        // App Engine Gradle plugin
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.8.1'
+
+        // Endpoints Frameworks Gradle plugin
+        classpath 'com.google.cloud.tools:endpoints-framework-gradle-plugin:1.0.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24"
+
+    }
+
+
+}
+// [END buildscript]
+
+repositories {   // repositories for Jar's you access in your code
+    maven { url 'https://jitpack.io' }
+    mavenCentral()
+    jcenter()
+}
+
+apply plugin: 'java'                              // standard Java tasks
+apply plugin: 'war'
+apply plugin: 'kotlin'
+
+// [START apply_plugins]
+apply plugin: 'com.google.cloud.tools.appengine'
+apply plugin: 'com.google.cloud.tools.endpoints-framework-server'
+// [END apply_plugins]
+
+compileJava.options.encoding = 'UTF-8'
+
+
+
+
+dependencies {
+    providedCompile group: 'javax.servlet', name: 'servlet-api', version: '2.5'
+    implementation 'jstl:jstl:1.2'
+    implementation group: 'javax.inject', name: 'javax.inject', version: '1'
+    implementation group: 'com.google.appengine', name: 'appengine-api-1.0-sdk', version: '1.9.76'
+    implementation ('org.jetbrains.kotlin:kotlin-stdlib:1.9.24')
+    implementation 'commons-codec:commons-codec:1.15'
+    implementation 'org.apache.commons:commons-text:1.9'
+    implementation 'org.jsoup:jsoup:1.13.1'
+    implementation group: 'com.google.zxing', name: 'core', version: '3.3.0'
+    implementation group: 'com.google.zxing', name: 'javase', version: '3.3.0'
+    implementation 'org.mockito:mockito-core:4.8.0'
+
+
+    // Uncomment to use Endpoints Frameworks v1.0 and comment the v2.0 section
+    // compile group: 'com.google.appengine', name: 'appengine-endpoints', version: '+'
+    // End of Endpoints Frameworks v1.0
+
+    // Endpoints Frameworks v2.0
+    // [START endpoints-tools]
+    implementation group: 'com.google.endpoints', name: 'endpoints-framework', version: '2.2.1'
+    // [END endpoints-tools]
+    // End of Endpoints Frameworks v2.0
+
+    // Administration API
+    // implementation 'com.google.protobuf:protobuf-java:3.10.0'
+    implementation ('com.google.protobuf:protobuf-java-util:3.0.0')
+    //implementation 'com.google.protobuf:protobuf-gradle-plugin:0.8.7'
+    implementation ('com.google.endpoints:endpoints-management-config:1.0.11')
+    implementation ('com.google.endpoints:endpoints-management-control:1.0.11'){
+        exclude group: 'com.google.protobuf', module: 'protobuf-java'
+    }
+    implementation ('com.google.endpoints:endpoints-management-control-appengine:1.0.11')
+    implementation ('com.google.endpoints:endpoints-framework-auth:1.0.11'){
+        exclude group: 'com.google.protobuf', module: 'protobuf-java'
+    }
+    // Administration API
+
+    implementation 'org.apache.oltu.oauth2:org.apache.oltu.oauth2.authzserver:1.0.1'
+    implementation 'javax.servlet:javax.servlet-api:3.0.1'
+    //compile 'javax.servlet:servlet-api:2.5'
+    implementation 'com.google.http-client:google-http-client:1.20.0'
+    implementation 'org.jasypt:jasypt:1.9.2'
+    implementation ('com.google.firebase:firebase-server-sdk:[3.0.1,)'){exclude group:  'com.google.guava',module: 'guava-jdk5'}
+    implementation ('com.google.cloud:gcloud-java-storage:0.2.6'){exclude group:  'com.google.guava',module: 'guava-jdk5'}
+    implementation 'com.google.maps:google-maps-services:0.1.16'
+    implementation 'com.google.appengine:appengine-testing:2.0.30'
+    implementation 'com.google.appengine:appengine-api-labs:1.9.46'
+    implementation 'org.jetbrains:annotations-java5:15.0'
+    implementation('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1')
+    implementation 'com.restfb:restfb:2.0.0-rc.1'
+    implementation 'org.apache.clerezza.ext:org.json.simple:0.4'
+    implementation group: 'commons-fileupload', name: 'commons-fileupload', version: '1.3'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.5'
+    implementation 'com.google.apis:google-api-services-plus:v1-rev509-1.22.0'
+    implementation 'com.google.apis:google-api-services-oauth2:v1-rev129-1.22.0'
+    implementation 'io.jsonwebtoken:jjwt:0.7.0'
+    implementation group: 'org.springframework', name: 'spring-web', version: '4.3.10.RELEASE'
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient-android', version: '4.3.5.1'
+    implementation (group: 'com.algolia', name: 'algoliasearch-appengine', version: '2.23.0')
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.4.1'
+    implementation('org.apache.httpcomponents:httpmime:4.3')
+    implementation group: 'com.googlecode.objectify', name: 'objectify', version: '5.1.22'
+    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:1.7.0'
+    implementation 'io.github.resilience4j:resilience4j-retry:1.7.0'
+
+
+    // https://mvnrepository.com/artifact/org.ehcache/ehcache
+    implementation group: 'org.ehcache', name: 'ehcache', version: '3.1.0'
+    // https://mvnrepository.com/artifact/redis.clients/jedis
+    implementation group: 'redis.clients', name: 'jedis', version: '4.1.1'
+
+    implementation project(':model')
+    implementation project(':networking')
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter-api:5.1.0'
+    )
+    testRuntimeOnly(
+            'org.junit.jupiter:junit-jupiter-engine:5.1.0'
+    )
+
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation("org.mockito:mockito-core:2.1.0")
+
+    // https://mvnrepository.com/artifact/org.powermock/powermock-module-junit5
+    implementation("org.powermock:powermock-core:2.0.9")
+
+    implementation 'com.github.growthbook:growthbook-sdk-java:0.5.0'
+}
+apply plugin: 'kotlin'
+
+configurations.all {
+    resolutionStrategy {
+        force     'org.apache.httpcomponents.client5:httpclient5:5.4.1'
+
+    }
+}
+ext {
+    appengineVersion = project.hasProperty('appengineVersion') ? project['appengineVersion'] : 'dummy'
+    appengineService = project.hasProperty('appengineService') ? project['appengineService'] : 'qa-env'
+    minInstances = project.hasProperty('minInstances') ? project['minInstances'] : 1
+}
+
+
+task replaceConfig(type: Copy) {
+    def minInstances = project.findProperty('minInstances') ?: 1
+    def profile = project.findProperty('profile') ?: 'dev'
+    
+    if (profile == 'dev') {
+        from "src/main/webapp/WEB-INF/dev/"
+    } else if (profile == 'prod') {
+        from 'src/main/webapp/WEB-INF/'
+    } else {
+        throw new GradleException("Perfil no válido. Debe ser '-Pprofile=dev' o '-Pprofile=prod'.")
+    }
+
+    include '*.xml'
+    into "build/exploded-${archivesBaseName}/WEB-INF"
+    expand(endpoints: [project: [id: projectId]], service: appengineService, minInstances: minInstances)
+    filteringCharset = 'UTF-8'
+}
+
+assemble.dependsOn replaceConfig
+appengine {  // App Engine tasks configuration
+
+    if (project.hasProperty('pathGoogleCloudSdk')) {
+        tools.cloudSdkHome = project['pathGoogleCloudSdk']
+    }
+
+    deploy {   // deploy configuration
+        stopPreviousVersion = false  // default - stop the current version
+        promote = false              // default - & make this the current version
+        version = appengineVersion
+    }
+}
+appengine.deploy.projectId = 'stunning-base-164402'
+
+// [START endpoints_plugin_config]
+endpointsServer {
+    // Endpoints Framework Plugin server-side configuration
+    //hostname = "dev-domicilios-farmatodo.appspot.com/"// DEVELOP
+    //hostname = "${projectId}.appspot.com/" // SANDBOX
+    hostname = "${projectId}.appspot.com" // PROD
+}
+// [END endpoints_plugin_config]
+
+
+sourceCompatibility = JavaVersion.VERSION_17    // App Engine Standard uses Java 8
+targetCompatibility = JavaVersion.VERSION_17     // App Engine Standard uses Java 8
+
+assemble.dependsOn replaceConfig
+sonarqube{
+    androidVariant 'relRelease'
+
+    properties{
+        // property "sonar.host.url","https://sonarqube.farmatodo.com"
+        // property 'sonar.login', "3ec994d4-d32d-4ac2-8a84-3c1f049d7741"
+        property 'sonar.projectKey', 'ftd-backend'
+        property "sonar.projectName", "ftd-backend"
+        property "sonar.sourceEncoding","UTF-8"
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.jacoco.reportPath", "**/jacoco/*.exec"
+        // property "sonar.branch" , "${BRANCH_NAME}"
+        property "sonar.sources", "src/main/java"
+
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.8"
+    //reportsDir = file("$buildDir/reports")
+}
+
+test {
+    useJUnitPlatform()
+}

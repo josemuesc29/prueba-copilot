@@ -1,0 +1,117 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START cloudbuild_npm_node]
+steps:
+  # Install dependencies
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        VERSION=$(echo $BRANCH_NAME | cut -c 9-16)
+        PRODUCTION=$(gcloud app versions list --service=default --hide-no-traffic --format="value(version.id)" | grep -v $$VERSION)
+        echo $$VERSION
+        echo $$PRODUCTION
+        gcloud app services set-traffic default --splits $$VERSION=0.75,$$PRODUCTION=0.25 --split-by cookie
+
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        VERSION=$(echo $BRANCH_NAME | cut -c 9-16)
+        RESPONSE=$(curl --request POST \
+                  --url https://hooks.slack.com/services/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 \
+                  --header 'Content-type: application/json' \
+                  --data '{
+                    "attachments": [
+                        {
+                            "color": "#99FF99",
+                            "blocks": [
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "type": "section",
+                                    "text": {
+                                        "type": "mrkdwn",
+                                        "text": "Se migra 75% del trafico a la version  https://'"$$VERSION"'-dot-stunning-base-164402.uc.r.appspot.com/"
+                                    },
+                                    "accessory": {
+                                        "type": "image",
+                                        "image_url": "https://c.tenor.com/zqjef5IbZ3MAAAAM/celebration-dance.gif",
+                                        "alt_text": "cute cat"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                  }')
+
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        VERSION=$(echo $BRANCH_NAME | cut -c 9-16)
+        RESPONSE=$(curl --request POST \
+                  --url https://hooks.slack.com/services/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 \
+                  --header 'Content-type: application/json' \
+                  --data '{
+                    "attachments": [
+                        {
+                            "color": "#99FF99",
+                            "blocks": [
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "type": "section",
+                                    "text": {
+                                        "type": "mrkdwn",
+                                        "text": "Revisa los logs papu, Para migrar al 100% aprobar en el siguiente link -> https://console.cloud.google.com/cloud-build/builds;region=global?query=trigger_id%3D%22bed55d9c-5709-4160-9ea9-0c86aa258977%22&project=stunning-base-164402"
+                                    },
+                                    "accessory": {
+                                        "type": "image",
+                                        "image_url": "https://c.tenor.com/zqjef5IbZ3MAAAAM/celebration-dance.gif",
+                                        "alt_text": "cute cat"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                  }')
+
+
+
+
+#steps:
+#  # Build the container image
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: ['build', '-t', 'gcr.io/dev-domicilios-farmatodo/test:buildtest', '.']
+#  # Push the container image to Container Registry
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: ['push', 'gcr.io/dev-domicilios-farmatodo/test:buildtest']
+#  # Deploy container image to Cloud Run
+#  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#    entrypoint: gcloud
+#    args: ['run', 'services', 'update', 'test', '--image', 'gcr.io/dev-domicilios-farmatodo/test:buildtest', '--region', 'us-central1', '--platform', 'managed', '--port', '8080']
+#images:
+#  - gcr.io/dev-domicilios-farmatodo/test:buildtest
+
+# Yaca Furioso
+
+
+

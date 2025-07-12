@@ -1,0 +1,88 @@
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// [START buildscript]
+buildscript {    // Configuration for building
+    repositories {
+        mavenCentral()
+        jcenter()    // Bintray's repository - a fast Maven Central mirror & more
+    }
+    dependencies {
+        // App Engine Gradle plugin
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.8.1'
+
+        // Endpoints Frameworks Gradle plugin
+        classpath 'com.google.cloud.tools:endpoints-framework-gradle-plugin:1.0.3'
+    }
+}
+// [END buildscript]
+
+repositories {   // repositories for Jar's you access in your code
+    mavenCentral()
+    jcenter()
+}
+
+apply plugin: 'java'                              // standard Java tasks
+apply plugin: 'war'                               // standard Web Archive plugin
+
+// [START apply_plugins]
+apply plugin: 'com.google.cloud.tools.appengine'
+apply plugin: 'com.google.cloud.tools.endpoints-framework-server'
+// [END apply_plugins]
+
+dependencies {
+    providedCompile group: 'javax.servlet', name: 'servlet-api', version:'2.5'
+    implementation 'jstl:jstl:1.2'
+    implementation group: 'javax.inject', name: 'javax.inject', version: '1'
+    implementation group: 'com.google.appengine', name: 'appengine-api-1.0-sdk', version: '1.9.76'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
+    implementation group: 'com.googlecode.objectify', name: 'objectify', version: '5.1.22'
+
+    // Uncomment to use Endpoints Frameworks v1.0 and comment the v2.0 section
+    // compile group: 'com.google.appengine', name: 'appengine-endpoints', version: '+'
+    // End of Endpoints Frameworks v1.0
+
+    // Endpoints Frameworks v2.0
+    // [START endpoints-tools]
+    implementation group: 'com.google.endpoints', name: 'endpoints-framework', version: '2.0.8'
+    // [END endpoints-tools]
+    implementation 'javax.servlet:servlet-api:2.5'
+    implementation 'org.apache.clerezza.ext:org.json.simple:0.4'
+    //compile 'com.algolia:algoliasearch-appengine:2.16.6'
+    implementation project(':model')
+    implementation project(':networking')
+    // End of Endpoints Frameworks v2.0
+}
+
+appengine {  // App Engine tasks configuration
+    deploy {   // deploy configuration
+        stopPreviousVersion = false     // true - stop the current version
+        promote = false                 // true - & make this the current version
+        version = "dev"          // available versions: [prod-black][prod-white][qa][dev]
+    }
+
+    run {      // local (dev_appserver) configuration (standard environments only)
+        port = 8080                 // default
+    }
+}
+
+// [START endpoints-server]
+endpointsServer {
+    // Endpoints Framework Plugin server-side configuration
+    hostname = "stunning-base-164402.appspot.com"
+}
+// [END endpoints-server]
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17

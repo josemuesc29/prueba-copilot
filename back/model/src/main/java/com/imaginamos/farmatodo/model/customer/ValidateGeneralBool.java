@@ -1,0 +1,40 @@
+package com.imaginamos.farmatodo.model.customer;
+
+public class ValidateGeneralBool {
+    private String code;
+    private String message;
+    private Boolean data;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Boolean getData() {
+        return data;
+    }
+
+    public void setData(Boolean data) {
+        this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return "ValidateGeneralBool{" +
+                "code='" + code + '\'' +
+                ", message='" + message + '\'' +
+                ", data=" + data +
+                '}';
+    }
+}

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Para ambiente de desarrollo se deja true-->
+<datastore-indexes autoGenerate="false">
+
+  <datastore-index kind="Store" ancestor="true" source="manual">
+    <property name="name" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Category" ancestor="true" source="manual">
+    <property name="priority" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="SubCategory" ancestor="false" source="manual">
+    <property name="parent" direction="asc"/>
+    <property name="priority" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="SubCategory" ancestor="true" source="manual">
+    <property name="priority" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="sales" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="idStoreGroup" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="sales" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="sales" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="sales" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="idStoreGroup" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="sales" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="sales" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="fullPrice" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="fullPrice" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="fullPrice" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="fullPrice" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="fullPrice" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Highlight" ancestor="false" source="manual">
+    <property name="categories.clasification" direction="asc"/>
+    <property name="orderingNumber" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="FilterName" ancestor="false" source="manual">
+    <property name="idCategory" direction="asc"/>
+    <property name="filter" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Filter" ancestor="true" source="manual">
+    <property name="value" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Coupon" ancestor="false" source="manual">
+    <property name="name" direction="asc"/>
+    <property name="expirationDate" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="CustomerCoupon" ancestor="true" source="manual">
+    <property name="useTime" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="DeliveryOrder" ancestor="true" source="manual">
+    <property name="currentStatus" direction="asc"/>
+    <property name="isActive" direction="asc"/>
+    <property name="createDate" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="CategoryPhoto" ancestor="false" source="manual">
+    <property name="idDepartment" direction="asc"/>
+    <property name="imagePosition" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Copyright" ancestor="false" source="manual">
+    <property name="active" direction="asc"/>
+    <property name="deliveryType" direction="asc"/>
+    <property name="id" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Copyright" ancestor="false" source="manual">
+    <property name="active" direction="asc"/>
+    <property name="provider" direction="asc"/>
+    <property name="id" direction="asc"/>
+   </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="sales" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="idStoreGroup" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="sales" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="sales" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="sales" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="idStoreGroup" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="sales" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="sales" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="fullPrice" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="filterList" direction="asc"/>
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="fullPrice" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="fullPrice" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="fullPrice" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Item" ancestor="false" source="manual">
+    <property name="subCategories" direction="asc"/>
+    <property name="subscribeAndSave" direction="asc"/>
+    <property name="fullPrice" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="City" ancestor="false" source="manual">
+    <property name="id" direction="asc"/>
+    <property name="name" direction="asc"/>
+  </datastore-index>
+
+</datastore-indexes>
