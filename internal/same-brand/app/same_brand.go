@@ -104,7 +104,8 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID stri
 	}
 
 	for _, productInfo := range processedItems {
-		rs = append(rs, mappers.MapProductInformationToSameBrandItem(&sameBrandItem, &productInfo))
+		mappedItem := mappers.MapProductInformationToSameBrandItem(&sameBrandItem, &productInfo)
+		rs = append(rs, mappedItem)
 	}
 
 	if len(rs) > 0 {
@@ -157,7 +158,8 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
 	}
 
-	query := fmt.Sprintf("brand:\"%s\"", brand)
+	// query := fmt.Sprintf("brand:\"%s\"", brand)
+	query := fmt.Sprintf("(\"query\":\"items\",\"filters\":\"fulfillment_default_store_id=26 AND brand='%s' AND stock>0\",\"hitsPerPage\":\"24\")", brand)
 
 	// Asegurarse de que el header X-Custom-City se propaga
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
