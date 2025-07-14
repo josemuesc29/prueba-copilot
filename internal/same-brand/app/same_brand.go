@@ -61,22 +61,22 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 	// 1. Intenta obtener de la caché
 	err := findSameBrandInCache(ctx, s.outPortCache, countryID, itemID, &rs)
 	if err == nil && len(rs) > 0 {
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, "Successfully retrieved from cache")
+		log.Infof(enums.LogFormat, correlationID, GetItemsBySameBrandLog, "Successfully retrieved from cache")
 		return rs, nil
 	}
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, fmt.Sprintf("Cache find error: %v", err))
+		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, fmt.Sprintf("Cache find error: %v", err))
 	}
 
 	originalItem, err := s.getItemBrand(ctx, countryID, itemID)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Error getting original item's brand: %v", err))
 		return nil, err
 	}
 
 	if originalItem.Brand == "" {
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Brand not found for item %s", itemID))
 
 		return []model.SameBrandItem{}, nil
@@ -84,7 +84,7 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 
 	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Brand, itemID, source, nearbyStores)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Error getting brand items from Algolia: %v", err))
 		return nil, err
 	}
@@ -112,11 +112,11 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 	if len(rs) > 0 {
 		err = saveSameBrandInCache(ctx, s.outPortCache, countryID, itemID, rs)
 		if err != nil {
-			log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, fmt.Sprintf("Cache save error: %v", err))
+			log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, fmt.Sprintf("Cache save error: %v", err))
 		}
 	}
 
-	log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, "Successfully retrieved and processed same brand items")
+	log.Infof(enums.LogFormat, correlationID, GetItemsBySameBrandLog, "Successfully retrieved and processed same brand items")
 	return rs, nil
 }
 
@@ -135,13 +135,13 @@ func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sh
 
 	items, err := s.outPortCatalogProduct.GetProductsInformationByObjectID(ctx, []string{itemID}, countryID)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, getItemBrandLog,
+		log.Errorf(enums.LogFormat, correlationID, getItemBrandLog,
 			fmt.Sprintf("Error from CatalogProduct port: %v. Repo: %s", err, repositoryProxyCatalogProduct))
 		return sharedModel.ProductInformation{}, err
 	}
 
 	if len(items) == 0 {
-		log.Printf(enums.LogFormat, correlationID, getItemBrandLog, fmt.Sprintf("Item not found: %s", itemID))
+		log.Warnf(enums.LogFormat, correlationID, getItemBrandLog, fmt.Sprintf("Item not found: %s", itemID))
 		return sharedModel.ProductInformation{}, fmt.Errorf("item not found: %s", itemID)
 	}
 
@@ -181,7 +181,7 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 
 	products, err := s.outPortCatalogProduct.GetProductsInformationByQuery(ctx, query, countryID)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, getBrandItemsFromAlgoliaLog,
+		log.Errorf(enums.LogFormat, correlationID, getBrandItemsFromAlgoliaLog,
 			fmt.Sprintf("Error from CatalogProduct port: %v. Query: '%s', Repo: %s", err, query, indexCatalogProducts))
 		return nil, err
 	}
@@ -219,25 +219,25 @@ func findSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	cachedData, err := outPortCache.Get(ctx, cacheKey)
 
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
+		log.Warnf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
 			fmt.Sprintf("Error getting from cache. Key: %s, Error: %v", cacheKey, err))
 		return err
 	}
 
 	if cachedData == "" {
-		log.Printf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
+		log.Debugf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
 			fmt.Sprintf("Cache miss. Key: %s", cacheKey))
 		return nil
 	}
 
 	err = json.Unmarshal([]byte(cachedData), response)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
+		log.Warnf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
 			fmt.Sprintf("Error unmarshalling cached data. Key: %s, Error: %v", cacheKey, err))
 		return err
 	}
 
-	log.Printf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
+	log.Debugf(enums.LogFormat, correlationID, findSameBrandInCacheLog,
 		fmt.Sprintf("Successfully retrieved from cache. Key: %s", cacheKey))
 	return nil
 }
@@ -260,7 +260,7 @@ func saveSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	cacheKey := fmt.Sprintf(keySameBrandCache, countryID, itemID)
 	dataToCache, errMarshal := json.Marshal(rs)
 	if errMarshal != nil {
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Error marshalling data for cache. Key: %s, Error: %v", cacheKey, errMarshal))
 		return errMarshal
 	}
@@ -269,18 +269,18 @@ func saveSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	ttl := time.Duration(config.Enviroments.RedisSameBrandDepartmentTTL) * time.Minute
 	if ttl <= 0 {
 		ttl = 60 * time.Minute
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Invalid or missing RedisSameBrandTTL, using default: %v. Key: %s", ttl, cacheKey))
 	}
 
 	err := outPortCache.Set(ctx, cacheKey, string(dataToCache), ttl)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Error saving to cache. Key: %s, Error: %v", cacheKey, err))
 		return err
 	}
 
-	log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+	log.Debugf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 		fmt.Sprintf("Successfully saved to cache. Key: %s, TTL: %v", cacheKey, ttl))
 	return nil
 }
