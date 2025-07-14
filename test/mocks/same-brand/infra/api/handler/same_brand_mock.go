@@ -20,7 +20,6 @@ import (
 type MockSameBrand struct {
 	ctrl     *gomock.Controller
 	recorder *MockSameBrandMockRecorder
-	isgomock struct{}
 }
 
 // MockSameBrandMockRecorder is the mock recorder for MockSameBrand.

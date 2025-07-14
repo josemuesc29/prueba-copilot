@@ -21,7 +21,6 @@ import (
 type MockCatalogCategoryOutPort struct {
 	ctrl     *gomock.Controller
 	recorder *MockCatalogCategoryOutPortMockRecorder
-	isgomock struct{}
 }
 
 // MockCatalogCategoryOutPortMockRecorder is the mock recorder for MockCatalogCategoryOutPort.

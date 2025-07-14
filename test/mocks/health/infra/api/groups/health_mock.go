@@ -20,7 +20,6 @@ import (
 type MockHealthGroup struct {
 	ctrl     *gomock.Controller
 	recorder *MockHealthGroupMockRecorder
-	isgomock struct{}
 }
 
 // MockHealthGroupMockRecorder is the mock recorder for MockHealthGroup.

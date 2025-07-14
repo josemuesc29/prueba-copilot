@@ -21,7 +21,6 @@ import (
 type MockConfigOutPort struct {
 	ctrl     *gomock.Controller
 	recorder *MockConfigOutPortMockRecorder
-	isgomock struct{}
 }
 
 // MockConfigOutPortMockRecorder is the mock recorder for MockConfigOutPort.
