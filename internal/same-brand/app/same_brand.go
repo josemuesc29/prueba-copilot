@@ -177,6 +177,10 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 		filters = append(filters, fmt.Sprintf("city_name='%s'", city))
 	}
 
+	if source != "" {
+		// filters = append(filters, fmt.Sprintf("source='%s'", source))
+	}
+
 	filters = append(filters, fmt.Sprintf("brand='%s'", brand))
 	filters = append(filters, "stock>0")
 
