@@ -6,4 +6,5 @@ type SameBrandRequestDto struct {
 	City         string `header:"X-Custom-City"`
 	Source       string `form:"source"`
 	NearbyStores string `form:"nearbyStores"`
+	StoreId      string `form:"storeId"`
 }

@@ -45,7 +45,7 @@ func NewSameBrand(
 	}
 }
 
-func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, source, nearbyStores string) ([]model.SameBrandItem, error) {
+func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, source, nearbyStores, storeId, city string) ([]model.SameBrandItem, error) {
 	var sameBrandItem model.SameBrandItem
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
@@ -82,7 +82,7 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 		return []model.SameBrandItem{}, nil
 	}
 
-	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Brand, itemID, source, nearbyStores)
+	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Brand, itemID, source, nearbyStores, storeId, city)
 	if err != nil {
 		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Error getting brand items from Algolia: %v", err))
@@ -148,7 +148,7 @@ func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sh
 	return items[0], nil
 }
 
-func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID, source, nearbyStores string) ([]sharedModel.ProductInformation, error) {
+func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID, source, nearbyStores, storeId, city string) ([]sharedModel.ProductInformation, error) {
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
 		if idStr, typeOk := id.(string); typeOk {
@@ -167,8 +167,14 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 			storeFilters = append(storeFilters, fmt.Sprintf("stock.fulfillment_stock.locations.store_id=%s", store))
 		}
 		filters = append(filters, "("+strings.Join(storeFilters, " OR ")+")")
+	} else if storeId != "" {
+		filters = append(filters, fmt.Sprintf("stock.fulfillment_stock.locations.store_id=%s", storeId))
 	} else {
 		filters = append(filters, "fulfillment_default_store_id=26")
+	}
+
+	if city != "" {
+		filters = append(filters, fmt.Sprintf("city_name='%s'", city))
 	}
 
 	filters = append(filters, fmt.Sprintf("brand='%s'", brand))

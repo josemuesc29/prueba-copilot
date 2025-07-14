@@ -71,13 +71,13 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromAlgolia(t *testing.T) {
 		{ID: "101", ObjectID: "101", Brand: brandName, StoresWithStock: make([]int, 20), Status: "A", HasStock: true},
 	}
 	// query := fmt.Sprintf("brand:\"%s\"", brandName)
-	query := `("query":"items","filters":"(stock.fulfillment_stock.locations.store_id=1 OR stock.fulfillment_stock.locations.store_id=2 OR stock.fulfillment_stock.locations.store_id=3) AND brand='TestBrand' AND stock>0","hitsPerPage":"24")`
+	query := `("query":"items","filters":"(stock.fulfillment_stock.locations.store_id=1 OR stock.fulfillment_stock.locations.store_id=2 OR stock.fulfillment_stock.locations.store_id=3) AND city_name='BOGOTA' AND brand='TestBrand' AND stock>0","hitsPerPage":"24")`
 
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), query, countryID).Return(algoliaProducts, nil)
 
 	mockCache.EXPECT().Set(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID), gomock.Any(), time.Duration(config.Enviroments.RedisSameBrandDepartmentTTL)*time.Minute).Return(nil)
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, source, nearbyStores)
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, source, nearbyStores, "26", "BOGOTA")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, items)
@@ -107,7 +107,7 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromCache(t *testing.T) {
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID)).Return(string(jsonData), nil)
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "")
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, items)
@@ -130,7 +130,7 @@ func TestSameBrand_GetItemsBySameBrand_OriginalItemNotFound(t *testing.T) {
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{}, nil)
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "")
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
 
 	assert.Error(t, err)
 	assert.Nil(t, items)
@@ -154,7 +154,7 @@ func TestSameBrand_GetItemsBySameBrand_OriginalItemBrandEmpty(t *testing.T) {
 	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: "", Status: "A", HasStock: true, StoresWithStock: []int{1}} // Simula stock en 1 tienda
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "")
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, items)
@@ -181,7 +181,7 @@ func TestSameBrand_GetItemsBySameBrand_AlgoliaError(t *testing.T) {
 	query := `("query":"items","filters":"fulfillment_default_store_id=26 AND brand='TestBrand' AND stock>0","hitsPerPage":"24")`
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), query, countryID).Return(nil, errors.New("algolia down"))
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "")
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
 
 	assert.Error(t, err)
 	assert.Nil(t, items)
@@ -225,7 +225,7 @@ func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), gomock.Any(), countryID).Return(algoliaProducts, nil)
 	mockCache.EXPECT().Set(gomock.AssignableToTypeOf(ctx), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "")
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
 	assert.NoError(t, err)
 	assert.Len(t, items, maxItemsLimit)
 
@@ -293,7 +293,7 @@ func TestSameBrand_GetItemsBySameBrand_CacheSetError(t *testing.T) {
 
 	mockCache.EXPECT().Set(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID), gomock.Any(), gomock.Any()).Return(errors.New("cache set failed"))
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "")
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, items)
@@ -327,7 +327,7 @@ func TestSameBrand_GetItemsBySameBrand_CacheGetError(t *testing.T) {
 
 	mockCache.EXPECT().Set(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID), gomock.Any(), gomock.Any()).Return(nil)
 
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "")
+	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, items)
