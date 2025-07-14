@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -44,7 +45,7 @@ func NewSameBrand(
 	}
 }
 
-func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID string) ([]model.SameBrandItem, error) {
+func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, source, nearbyStores string) ([]model.SameBrandItem, error) {
 	var sameBrandItem model.SameBrandItem
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
@@ -81,7 +82,7 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID stri
 		return []model.SameBrandItem{}, nil
 	}
 
-	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Brand, itemID)
+	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Brand, itemID, source, nearbyStores)
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Error getting brand items from Algolia: %v", err))
@@ -147,7 +148,7 @@ func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sh
 	return items[0], nil
 }
 
-func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID string) ([]sharedModel.ProductInformation, error) {
+func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID, source, nearbyStores string) ([]sharedModel.ProductInformation, error) {
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
 		if idStr, typeOk := id.(string); typeOk {
@@ -158,8 +159,22 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
 	}
 
-	// query := fmt.Sprintf("brand:\"%s\"", brand)
-	query := fmt.Sprintf("(\"query\":\"items\",\"filters\":\"fulfillment_default_store_id=26 AND brand='%s' AND stock>0\",\"hitsPerPage\":\"24\")", brand)
+	var filters []string
+	if nearbyStores != "" {
+		stores := strings.Split(nearbyStores, ",")
+		var storeFilters []string
+		for _, store := range stores {
+			storeFilters = append(storeFilters, fmt.Sprintf("stock.fulfillment_stock.locations.store_id=%s", store))
+		}
+		filters = append(filters, "("+strings.Join(storeFilters, " OR ")+")")
+	} else {
+		filters = append(filters, "fulfillment_default_store_id=26")
+	}
+
+	filters = append(filters, fmt.Sprintf("brand='%s'", brand))
+	filters = append(filters, "stock>0")
+
+	query := fmt.Sprintf("(\"query\":\"items\",\"filters\":\"%s\",\"hitsPerPage\":\"24\")", strings.Join(filters, " AND "))
 
 	// Asegurarse de que el header X-Custom-City se propaga
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)

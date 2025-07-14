@@ -50,8 +50,13 @@ func (h sameBrand) GetItemsSameBrand(c *gin.Context) {
 		return
 	}
 
+	if err := c.ShouldBindQuery(&requestDto); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
 	log.Printf(enums.LogFormat, correlationID, getItemsSameBrandLog, fmt.Sprintf(enums.CallService, getItemsSameBrand))
-	data, err := h.portSameBrand.GetItemsBySameBrand(c, requestDto.CountryID, requestDto.ItemID)
+	data, err := h.portSameBrand.GetItemsBySameBrand(c, requestDto.CountryID, requestDto.ItemID, requestDto.Source, requestDto.NearbyStores)
 
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, getItemsSameBrandLog, fmt.Sprintf(enums.GetData, "error", serviceSameBrand))
