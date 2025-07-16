@@ -45,10 +45,11 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromAlgolia(t *testing.T) {
 
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
 	config.Enviroments.RedisSameBrandDepartmentTTL = 60
 
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "123"
@@ -62,6 +63,11 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromAlgolia(t *testing.T) {
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID)).Return("", nil)
 
+	configBestSeller := sharedModel.ConfigBestSeller{
+		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+	}
+	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
+
 	originalItem := sharedModel.ProductInformation{ID: itemID, ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}} // Simula stock en 1 tienda
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 
@@ -71,7 +77,7 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromAlgolia(t *testing.T) {
 		{ID: "101", ObjectID: "101", Brand: brandName, StoresWithStock: make([]int, 20), Status: "A", HasStock: true},
 	}
 	// query := fmt.Sprintf("brand:\"%s\"", brandName)
-	query := `("query":"items","filters":"(stock.fulfillment_stock.locations.store_id=1 OR stock.fulfillment_stock.locations.store_id=2 OR stock.fulfillment_stock.locations.store_id=3) AND city_name='BOGOTA' AND source='web' AND brand='TestBrand' AND stock>0","hitsPerPage":"24")`
+	query := `hitsPerPage=24&filters=brand:'TestBrand' AND stores_with_stock:26`
 
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), query, countryID).Return(algoliaProducts, nil)
 
@@ -93,8 +99,9 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromCache(t *testing.T) {
 
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "123"
@@ -120,14 +127,21 @@ func TestSameBrand_GetItemsBySameBrand_OriginalItemNotFound(t *testing.T) {
 
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "123"
 	ctx := ginContextWithHeaders(t, "GET", "/", map[string]string{enums.HeaderCorrelationID: "test-corr-id-notfound"})
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
+
+	configBestSeller := sharedModel.ConfigBestSeller{
+		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+	}
+	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
+
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{}, nil)
 
 	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
@@ -143,14 +157,21 @@ func TestSameBrand_GetItemsBySameBrand_OriginalItemBrandEmpty(t *testing.T) {
 
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "123"
 	ctx := ginContextWithHeaders(t, "GET", "/", map[string]string{enums.HeaderCorrelationID: "test-corr-id-brandempty"})
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
+
+	configBestSeller := sharedModel.ConfigBestSeller{
+		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+	}
+	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
+
 	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: "", Status: "A", HasStock: true, StoresWithStock: []int{1}} // Simula stock en 1 tienda
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 
@@ -167,8 +188,9 @@ func TestSameBrand_GetItemsBySameBrand_AlgoliaError(t *testing.T) {
 
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "123"
@@ -176,9 +198,15 @@ func TestSameBrand_GetItemsBySameBrand_AlgoliaError(t *testing.T) {
 	ctx := ginContextWithHeaders(t, "GET", "/", map[string]string{enums.HeaderCorrelationID: "test-corr-id-algolia-err"})
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
+
+	configBestSeller := sharedModel.ConfigBestSeller{
+		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+	}
+	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
+
 	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}} // Simula stock en 1 tienda
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
-	query := `("query":"items","filters":"fulfillment_default_store_id=26 AND brand='TestBrand' AND stock>0","hitsPerPage":"24")`
+	query := `hitsPerPage=24&filters=brand:'TestBrand' AND stores_with_stock:`
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), query, countryID).Return(nil, errors.New("algolia down"))
 
 	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
@@ -193,8 +221,9 @@ func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
 	defer ctrl.Finish()
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "originalItem"
@@ -204,6 +233,12 @@ func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
 	config.Enviroments.RedisSameBrandDepartmentTTL = 10
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
+
+	configBestSeller := sharedModel.ConfigBestSeller{
+		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+	}
+	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
+
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{{ID: itemID, ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}}}, nil)
 
 	var algoliaProducts []sharedModel.ProductInformation
@@ -246,7 +281,7 @@ func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
 }
 
 func TestSameBrand_ShouldIncludeProduct(t *testing.T) {
-	s := NewSameBrand(nil, nil).(*sameBrand)
+	s := NewSameBrand(nil, nil, nil).(*sameBrand)
 
 	testCases := []struct {
 		name     string
@@ -273,9 +308,10 @@ func TestSameBrand_GetItemsBySameBrand_CacheSetError(t *testing.T) {
 
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
 	config.Enviroments.RedisSameBrandDepartmentTTL = 60
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "123"
@@ -283,12 +319,18 @@ func TestSameBrand_GetItemsBySameBrand_CacheSetError(t *testing.T) {
 	ctx := ginContextWithHeaders(t, "GET", "/", map[string]string{enums.HeaderCorrelationID: "test-corr-id-cacheseterr"})
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID)).Return("", nil)
+
+	configBestSeller := sharedModel.ConfigBestSeller{
+		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+	}
+	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
+
 	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}}
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 	algoliaProducts := []sharedModel.ProductInformation{
 		{ObjectID: "456", Brand: brandName, StoresWithStock: make([]int, 10), Status: "A", HasStock: true},
 	}
-	query := `("query":"items","filters":"fulfillment_default_store_id=26 AND brand='TestBrand' AND stock>0","hitsPerPage":"24")`
+	query := `hitsPerPage=24&filters=brand:'TestBrand' AND stores_with_stock:`
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), query, countryID).Return(algoliaProducts, nil)
 
 	mockCache.EXPECT().Set(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID), gomock.Any(), gomock.Any()).Return(errors.New("cache set failed"))
@@ -306,9 +348,10 @@ func TestSameBrand_GetItemsBySameBrand_CacheGetError(t *testing.T) {
 
 	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
 	mockCache := mock_shared_ports.NewMockCache(ctrl)
+	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
 
 	config.Enviroments.RedisSameBrandDepartmentTTL = 60
-	appService := NewSameBrand(mockCatalogProduct, mockCache)
+	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
 
 	countryID := "CO"
 	itemID := "123"
@@ -317,12 +360,17 @@ func TestSameBrand_GetItemsBySameBrand_CacheGetError(t *testing.T) {
 
 	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID)).Return("", errors.New("cache get failed"))
 
+	configBestSeller := sharedModel.ConfigBestSeller{
+		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+	}
+	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
+
 	originalItem := sharedModel.ProductInformation{ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}}
 	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{originalItem}, nil)
 	algoliaProducts := []sharedModel.ProductInformation{
 		{ObjectID: "456", Brand: brandName, StoresWithStock: make([]int, 10), Status: "A", HasStock: true},
 	}
-	query := `("query":"items","filters":"fulfillment_default_store_id=26 AND brand='TestBrand' AND stock>0","hitsPerPage":"24")`
+	query := `hitsPerPage=24&filters=brand:'TestBrand' AND stores_with_stock:`
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), query, countryID).Return(algoliaProducts, nil)
 
 	mockCache.EXPECT().Set(gomock.AssignableToTypeOf(ctx), fmt.Sprintf(keySameBrandCache, countryID, itemID), gomock.Any(), gomock.Any()).Return(nil)

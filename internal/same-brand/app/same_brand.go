@@ -27,20 +27,24 @@ const (
 	indexCatalogProducts          = "index catalog products"
 	keySameBrandCache             = "same_brand_%s_%s" // countryID, itemID
 	maxItemsLimit                 = 24
+	configBestSellerKey           = "BEST-SELLERS.CONFIG"
 )
 
 type sameBrand struct {
 	outPortCatalogProduct sharedOutPorts.CatalogProduct
 	outPortCache          sharedOutPorts.Cache
+	outPortConfig         sharedOutPorts.ConfigOutPort
 }
 
 func NewSameBrand(
 	outPortCatalogProduct sharedOutPorts.CatalogProduct,
 	outPortCache sharedOutPorts.Cache,
+	outPortConfig sharedOutPorts.ConfigOutPort,
 ) inPorts.SameBrand {
 	return &sameBrand{
 		outPortCatalogProduct: outPortCatalogProduct,
 		outPortCache:          outPortCache,
+		outPortConfig:         outPortConfig,
 	}
 }
 
@@ -67,6 +71,16 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, fmt.Sprintf("Cache find error: %v", err))
 	}
 
+	configBestSeller, err := s.outPortConfig.GetConfigBestSeller(ctx, countryID, configBestSellerKey)
+	if err != nil {
+		log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetItemsBySameBrandLog,
+			fmt.Sprintf(enums.GetData, "error", "repositoryConfig"))
+		return nil, err
+	}
+
+	log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetItemsBySameBrandLog,
+		fmt.Sprintf(enums.GetData, "Success", configBestSeller))
+
 	originalItem, err := s.getItemBrand(ctx, countryID, itemID)
 	if err != nil {
 		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
@@ -81,7 +95,7 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 		return []model.SameBrandItem{}, nil
 	}
 
-	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Brand, itemID, source, nearbyStores, storeId, city)
+	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Brand, itemID, source, nearbyStores, storeId, city, configBestSeller)
 	if err != nil {
 		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf("Error getting brand items from Algolia: %v", err))
@@ -147,7 +161,7 @@ func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sh
 	return items[0], nil
 }
 
-func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID, source, nearbyStores, storeId, city string) ([]sharedModel.ProductInformation, error) {
+func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID, source, nearbyStores, storeId, city string, configBestSeller sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
 		if idStr, typeOk := id.(string); typeOk {
@@ -183,7 +197,7 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 	filters = append(filters, fmt.Sprintf("brand='%s'", brand))
 	filters = append(filters, "stock>0")
 
-	query := fmt.Sprintf("(\"query\":\"items\",\"filters\":\"%s\",\"hitsPerPage\":\"24\")", strings.Join(filters, " AND "))
+	query := fmt.Sprintf(configBestSeller.QueryProducts, "24", brand, storeId)
 
 	// Asegurarse de que el header X-Custom-City se propaga
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
