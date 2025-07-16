@@ -26,7 +26,6 @@ const (
 	repositoryProxyCatalogProduct = "repository proxy catalog product"
 	indexCatalogProducts          = "index catalog products"
 	keySameBrandCache             = "same_brand_%s_%s" // countryID, itemID
-	maxItemsLimit                 = 24
 	configBestSellerKey           = "BEST-SELLERS.CONFIG"
 )
 
@@ -113,10 +112,6 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 		return len(processedItems[i].StoresWithStock) > len(processedItems[j].StoresWithStock)
 	})
 
-	if len(processedItems) > maxItemsLimit {
-		processedItems = processedItems[:maxItemsLimit]
-	}
-
 	for _, productInfo := range processedItems {
 		mappedItem := mappers.MapProductInformationToSameBrandItem(&sameBrandItem, &productInfo)
 		rs = append(rs, mappedItem)
@@ -197,7 +192,7 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 	filters = append(filters, fmt.Sprintf("brand='%s'", brand))
 	filters = append(filters, "stock>0")
 
-	query := fmt.Sprintf(configBestSeller.QueryProducts, "24", brand, storeId)
+	query := fmt.Sprintf(configBestSeller.QueryProducts, fmt.Sprintf("%.0f", configBestSeller.CountItems), brand, storeId)
 
 	// Asegurarse de que el header X-Custom-City se propaga
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)

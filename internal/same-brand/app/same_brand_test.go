@@ -65,6 +65,7 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromAlgolia(t *testing.T) {
 
 	configBestSeller := sharedModel.ConfigBestSeller{
 		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
+		CountItems:    20,
 	}
 	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
 
@@ -77,7 +78,7 @@ func TestSameBrand_GetItemsBySameBrand_Success_FromAlgolia(t *testing.T) {
 		{ID: "101", ObjectID: "101", Brand: brandName, StoresWithStock: make([]int, 20), Status: "A", HasStock: true},
 	}
 	// query := fmt.Sprintf("brand:\"%s\"", brandName)
-	query := `hitsPerPage=24&filters=brand:'TestBrand' AND stores_with_stock:26`
+	query := `hitsPerPage=20&filters=brand:'TestBrand' AND stores_with_stock:26`
 
 	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), query, countryID).Return(algoliaProducts, nil)
 
@@ -214,70 +215,6 @@ func TestSameBrand_GetItemsBySameBrand_AlgoliaError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, items)
 	assert.Contains(t, err.Error(), "algolia down")
-}
-
-func TestSameBrand_GetItemsBySameBrand_RespectsMaxLimitAndOrder(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockCatalogProduct := mock_shared_ports.NewMockCatalogProduct(ctrl)
-	mockCache := mock_shared_ports.NewMockCache(ctrl)
-	mockConfig := mock_shared_ports.NewMockConfigOutPort(ctrl)
-
-	appService := NewSameBrand(mockCatalogProduct, mockCache, mockConfig)
-
-	countryID := "CO"
-	itemID := "originalItem"
-	brandName := "LimitBrand"
-	ctx := ginContextWithHeaders(t, "GET", "/", map[string]string{enums.HeaderCorrelationID: "test-corr-id-limit"})
-
-	config.Enviroments.RedisSameBrandDepartmentTTL = 10
-
-	mockCache.EXPECT().Get(gomock.AssignableToTypeOf(ctx), gomock.Any()).Return("", nil)
-
-	configBestSeller := sharedModel.ConfigBestSeller{
-		QueryProducts: "hitsPerPage=%s&filters=brand:'%s' AND stores_with_stock:%s",
-	}
-	mockConfig.EXPECT().GetConfigBestSeller(gomock.AssignableToTypeOf(ctx), countryID, configBestSellerKey).Return(configBestSeller, nil)
-
-	mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.AssignableToTypeOf(ctx), []string{itemID}, countryID).Return([]sharedModel.ProductInformation{{ID: itemID, ObjectID: itemID, Brand: brandName, Status: "A", HasStock: true, StoresWithStock: []int{1}}}, nil)
-
-	var algoliaProducts []sharedModel.ProductInformation
-	totalProductsFromAlgolia := maxItemsLimit + 5
-	for i := 0; i < totalProductsFromAlgolia; i++ {
-		itemIDStr := fmt.Sprintf("item%d", i)
-		algoliaProducts = append(algoliaProducts, sharedModel.ProductInformation{
-			ID:              itemIDStr, // Asegurar que el campo ID esté seteado
-			ObjectID:        itemIDStr,
-			Brand:           brandName,
-			StoresWithStock: make([]int, i+1), // Usar StoresWithStock
-			Status:          "A",
-			HasStock:        true,
-			MediaImageUrl:   fmt.Sprintf("http://image.com/item%d.jpg", i),
-			FullPrice:       float64(100 + i),
-			OfferPrice:      float64(90 + i),
-		})
-	}
-	mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.AssignableToTypeOf(ctx), gomock.Any(), countryID).Return(algoliaProducts, nil)
-	mockCache.EXPECT().Set(gomock.AssignableToTypeOf(ctx), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-	items, err := appService.GetItemsBySameBrand(ctx, countryID, itemID, "", "", "", "")
-	assert.NoError(t, err)
-	assert.Len(t, items, maxItemsLimit)
-
-	expectedFirstItemID := fmt.Sprintf("item%d", totalProductsFromAlgolia-1)
-	assert.Equal(t, expectedFirstItemID, items[0].ID)
-	var originalProductForFirstItem sharedModel.ProductInformation
-	for _, p := range algoliaProducts {
-		if p.ObjectID == expectedFirstItemID {
-			originalProductForFirstItem = p
-			break
-		}
-	}
-
-	assert.Equal(t, len(originalProductForFirstItem.StoresWithStock), items[0].TotalStock)
-
-	expectedLastItemIDInLimit := algoliaProducts[totalProductsFromAlgolia-maxItemsLimit].ObjectID
-	assert.Equal(t, expectedLastItemIDInLimit, items[maxItemsLimit-1].ID)
 }
 
 func TestSameBrand_ShouldIncludeProduct(t *testing.T) {
