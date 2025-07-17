@@ -10,4 +10,5 @@ type ProductsRelatedRequestDto struct {
 	QueryAlgolia  string `form:"query"`      // Query para Algolia
 	IndexName     string `form:"index-name"` // Nombre del índice opcional para Algolia
 	AlgoliaParams string `form:"params"`     // Otros parámetros específicos de Algolia como cadena
+	Category      string `form:"category"`
 }

@@ -42,9 +42,9 @@ func NewProductsRelated(outPortCatalogProduct sharedOutPorts.CatalogProduct, out
 func (p *productsRelated) GetRelatedItems(
 	ctx *gin.Context,
 	countryID, itemID string,
-	nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr string,
-) (model.AlgoliaRelatedProductsResponse, error) {
-	var response model.AlgoliaRelatedProductsResponse
+	nearbyStores, city, category, indexName, algoliaParamsStr string,
+) (model.AlgoliaRecommendResponse, error) {
+	var response model.AlgoliaRecommendResponse
 	correlationID := ""
 	if ctx != nil {
 		value, exists := ctx.Get(string(enums.HeaderCorrelationID))
@@ -55,111 +55,41 @@ func (p *productsRelated) GetRelatedItems(
 		}
 	}
 
-	paramsKey := fmt.Sprintf("nearby:%s;city:%s;query:%s;index:%s;params:%s", nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr)
-	hasher := sha256.New()
-	hasher.Write([]byte(paramsKey))
-	paramsHash := hex.EncodeToString(hasher.Sum(nil))
-	cacheKey := fmt.Sprintf(keyRelatedCacheFormat, countryID, itemID, paramsHash)
+	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Getting related products for itemID: %s, category: %s, country: %s", itemID, category, countryID))
 
-	cachedData, err := p.outPortCache.Get(ctx, cacheKey)
-	if err == nil && cachedData != "" {
-		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Cache hit for key: %s", cacheKey))
-		if errUnmarshal := json.Unmarshal([]byte(cachedData), &response); errUnmarshal == nil {
-			return response, nil
-		} else {
-			log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Error unmarshalling cached data: %v", errUnmarshal))
-		}
-	} else if err != nil {
-		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Error getting from cache (key: %s): %v", cacheKey, err))
-	} else {
-		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Cache miss for key: %s", cacheKey))
-	}
+	// For now, we are skipping the cache logic to focus on the new implementation.
 
-	var effectiveAlgoliaParams string
-	if queryAlgolia != "" {
-		effectiveAlgoliaParams = "query=" + queryAlgolia
-	}
-
-	if algoliaParamsStr != "" {
-		if effectiveAlgoliaParams != "" {
-			effectiveAlgoliaParams = effectiveAlgoliaParams + "&" + algoliaParamsStr
-		} else {
-			effectiveAlgoliaParams = algoliaParamsStr
-		}
-	}
-
-	filterExclusion := fmt.Sprintf("NOT objectID:%s", itemID)
-	if strings.Contains(effectiveAlgoliaParams, "filters=") {
-		parts := strings.SplitN(effectiveAlgoliaParams, "filters=", 2)
-		filterAndRest := ""
-		if len(parts) > 1 {
-			filterAndRest = parts[1]
-		}
-		currentFiltersValue := ""
-		restOfParams := ""
-		ampersandIndex := strings.Index(filterAndRest, "&")
-		if ampersandIndex != -1 {
-			currentFiltersValue = filterAndRest[:ampersandIndex]
-			restOfParams = filterAndRest[ampersandIndex:]
-		} else {
-			currentFiltersValue = filterAndRest
-		}
-		newFilters := fmt.Sprintf("%s AND %s", currentFiltersValue, filterExclusion)
-		effectiveAlgoliaParams = fmt.Sprintf("%sfilters=%s%s", parts[0], newFilters, restOfParams)
-	} else {
-		if effectiveAlgoliaParams != "" {
-			effectiveAlgoliaParams = fmt.Sprintf("%s&filters=%s", effectiveAlgoliaParams, filterExclusion)
-		} else {
-			effectiveAlgoliaParams = fmt.Sprintf("filters=%s", filterExclusion)
-		}
-	}
-
-	finalAlgoliaQuery := effectiveAlgoliaParams
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Querying Algolia with params: [%s] for country: %s, itemID: %s", finalAlgoliaQuery, countryID, itemID))
-
-	products, err := p.outPortCatalogProduct.GetProductsInformationByQuery(ctx, finalAlgoliaQuery, countryID)
+	recommendResponse, err := p.outPortCatalogProduct.GetRelatedProducts(ctx, itemID, category, countryID)
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Error getting related products from Algolia: %v", err))
-		return model.AlgoliaRelatedProductsResponse{}, err
-	}
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Received %d products from Algolia", len(products)))
-
-	var filteredProducts []sharedModel.ProductInformation
-	for _, product := range products {
-		if p.shouldIncludeProduct(product, itemID) {
-			filteredProducts = append(filteredProducts, product)
-		}
-	}
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Filtered products to %d items after shouldIncludeProduct", len(filteredProducts)))
-
-	currentPage := 0 // Default
-	currentHitsPerPage := len(filteredProducts)
-
-	queryParamsMap := parseQueryParams(finalAlgoliaQuery)
-	if pageStr, ok := queryParamsMap["page"]; ok {
-		if pageInt, errConv := strconv.Atoi(pageStr); errConv == nil {
-			currentPage = pageInt
-		}
-	}
-	if hppStr, ok := queryParamsMap["hitsPerPage"]; ok {
-		if hppInt, errConv := strconv.Atoi(hppStr); errConv == nil {
-			currentHitsPerPage = hppInt
-		}
+		return response, err
 	}
 
-	response = mappers.MapToAlgoliaRelatedProductsResponse(filteredProducts, queryAlgolia, currentPage, currentHitsPerPage)
+	// The new response structure is different, so we adapt.
+	// The response from GetRelatedProducts already contains the hits.
+	if len(recommendResponse.Results) > 0 {
+		// We assume the first result is the one we want, as per the request structure.
+		hits := recommendResponse.Results[0].Hits
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Received %d related products from Algolia Recommend", len(hits)))
 
-	jsonData, err := json.Marshal(response)
-	if err == nil {
-		errCacheSet := p.outPortCache.Set(ctx, cacheKey, string(jsonData), time.Duration(config.Enviroments.RedisSameBrandDepartmentTTL)*time.Minute)
-		if errCacheSet != nil {
-			log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Error saving to cache (key: %s): %v", cacheKey, errCacheSet))
-		} else {
-			log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Successfully saved to cache (key: %s)", cacheKey))
+		var filteredProducts []sharedModel.ProductInformation
+		for _, product := range hits {
+			if p.shouldIncludeProduct(product, itemID) {
+				filteredProducts = append(filteredProducts, product)
+			}
 		}
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Filtered products to %d items after shouldIncludeProduct", len(filteredProducts)))
+
+		// We need to decide how to present this. For now, let's just use the hits.
+		// The old response model `AlgoliaRelatedProductsResponse` is not compatible.
+		// We will return the new `AlgoliaRecommendResponse` directly.
+		recommendResponse.Results[0].Hits = filteredProducts
+		response = recommendResponse
 	} else {
-		log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Error marshalling response for cache: %v", err))
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, "Received no results from Algolia Recommend")
 	}
+
+	// We can re-add caching logic here later if needed.
 
 	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, "Related items retrieved successfully")
 	return response, nil

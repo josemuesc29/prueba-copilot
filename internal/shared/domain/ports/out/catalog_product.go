@@ -11,4 +11,5 @@ type CatalogProduct interface {
 	GetProductInformation(c *gin.Context, productID string) (model.ProductInformation, error)
 	GetProductsInformationByObjectID(c *gin.Context, products []string, countryID string) ([]model.ProductInformation, error)
 	GetProductsInformationByQuery(c *gin.Context, params string, countryID string) ([]model.ProductInformation, error)
+	GetRelatedProducts(ctx *gin.Context, itemID, category, countryID string) (relatedModel.AlgoliaRecommendResponse, error)
 }

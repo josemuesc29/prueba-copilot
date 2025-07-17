@@ -64,7 +64,7 @@ func (h *productsRelatedHandler) GetRelatedItems(c *gin.Context) {
 		reqDto.ItemID,
 		reqDto.NearbyStores,
 		reqDto.City,
-		reqDto.QueryAlgolia,
+		reqDto.Category,
 		reqDto.IndexName,
 		reqDto.AlgoliaParams,
 	)

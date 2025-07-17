@@ -2,6 +2,38 @@ package model
 
 import sharedModel "ftd-td-catalog-item-read-services/internal/shared/domain/model"
 
+// AlgoliaRecommendRequest is the structure for making a request to Algolia's recommend API.
+type AlgoliaRecommendRequest struct {
+	Requests []RequestRecommend `json:"requests"`
+}
+
+// RequestRecommend defines a single recommendation request.
+type RequestRecommend struct {
+	IndexName          string           `json:"indexName"`
+	Model              string           `json:"model"`
+	ObjectID           string           `json:"objectID"`
+	Threshold          int              `json:"threshold"`
+	MaxRecommendations int              `json:"maxRecommendations,omitempty"`
+	QueryParameters    *QueryParameters `json:"queryParameters,omitempty"`
+}
+
+// QueryParameters holds the query parameters for the recommendation request.
+type QueryParameters struct {
+	FacetFilters [][]string `json:"facetFilters,omitempty"`
+}
+
+// AlgoliaRecommendResponse is the structure for the response from Algolia's recommend API.
+type AlgoliaRecommendResponse struct {
+	Results []RecommendResult `json:"results"`
+}
+
+// RecommendResult contains the results of a single recommendation request.
+type RecommendResult struct {
+	Hits    []sharedModel.ProductInformation `json:"hits"`
+	Message string                           `json:"message,omitempty"`
+	Status  int                              `json:"status,omitempty"`
+}
+
 type AlgoliaRelatedProductsResponse struct {
 	Results []AlgoliaResult `json:"results"`
 }

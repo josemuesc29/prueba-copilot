@@ -134,3 +134,54 @@ func getRequetsByProducts(products []string, countryID string) request.RqCatalog
 	log.Println("Request Catalog Products by Object IDs:", req)
 	return req
 }
+
+func (t CatalogProduct) GetRelatedProducts(ctx *gin.Context, itemID, category, countryID string) (relatedModel.AlgoliaRecommendResponse, error) {
+	var resp relatedModel.AlgoliaRecommendResponse
+
+	indexName := enums.CountryIndexName[countryID]
+	if indexName == "" {
+		return resp, fmt.Errorf("invalid country ID: %s", countryID)
+	}
+
+	requests := []relatedModel.RequestRecommend{
+		{
+			IndexName:          indexName,
+			Model:              "related-products",
+			ObjectID:           itemID,
+			Threshold:          0,
+			MaxRecommendations: 15,
+		},
+	}
+
+	if category != "" {
+		requests[0].QueryParameters = &relatedModel.QueryParameters{
+			FacetFilters: [][]string{{fmt.Sprintf("categorie:%s", category)}},
+		}
+	}
+
+	recommendRequest := relatedModel.AlgoliaRecommendRequest{
+		Requests: requests,
+	}
+
+	url := fmt.Sprintf("%s/1/indexes/*/recommendations", config.Enviroments.CatalogProductsUrl)
+	log.Println("URL Algolia Recommend:", url)
+
+	_, err := pkgHttp.DoRequest(
+		pkgHttp.Requestor{
+			HttpMethod: http.MethodPost,
+			MaxRetry:   retry,
+			Backoff:    5 * time.Second,
+			TTLTimeOut: 3 * time.Second,
+			URL:        url,
+			Body:       recommendRequest,
+			Headers: http.Header{
+				headerContentType:   {contentTypeValueJson},
+				headerAlgoliaApiKey: {config.Enviroments.ApiKeyCatalogProducts},
+				headerAlgoliaAppID:  {config.Enviroments.ApplicationIDCatalogProducts},
+			},
+			Context: ctx,
+		},
+		&resp)
+
+	return resp, err
+}
