@@ -39,6 +39,13 @@ func NewProductsRelated(outPortCatalogProduct sharedOutPorts.CatalogProduct, out
 	}
 }
 
+const (
+	// ... (existing constants)
+	findRelatedInCacheLog = "ProductsRelatedService.findRelatedInCache"
+	saveRelatedInCacheLog = "ProductsRelatedService.saveRelatedInCache"
+	keyRelatedCacheFormat = "related_products_%s_%s" // countryID, itemID
+)
+
 func (p *productsRelated) GetRelatedItems(
 	ctx *gin.Context,
 	countryID, itemID string,
@@ -52,6 +59,22 @@ func (p *productsRelated) GetRelatedItems(
 				correlationID = id
 			}
 		}
+	}
+
+	// Attempt to retrieve from cache first
+	cacheKey := fmt.Sprintf(keyRelatedCacheFormat, countryID, itemID)
+	cachedData, errCache := p.outPortCache.Get(ctx, cacheKey)
+	if errCache == nil && cachedData != "" {
+		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Cache hit for key: %s", cacheKey))
+		if errUnmarshal := json.Unmarshal([]byte(cachedData), &response); errUnmarshal == nil {
+			return response, nil
+		} else {
+			log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Error unmarshalling cached data: %v", errUnmarshal))
+		}
+	} else if errCache != nil {
+		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Error getting from cache (key: %s): %v", cacheKey, errCache))
+	} else {
+		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Cache miss for key: %s", cacheKey))
 	}
 
 	// Step 1: Get the main product's information
@@ -81,7 +104,6 @@ func (p *productsRelated) GetRelatedItems(
 	config, err := p.outPortConfig.GetConfigRelatedProducts(ctx, countryID, configKey)
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Error getting related products config: %v", err))
-		// As a fallback, we could use a default query, but for now, we'll return an error.
 		return nil, err
 	}
 
@@ -101,6 +123,22 @@ func (p *productsRelated) GetRelatedItems(
 		if p.shouldIncludeProduct(product, itemID) {
 			mappedItem := mappers.MapProductInformationToRelatedItem(&product)
 			response = append(response, mappedItem)
+		}
+	}
+
+	// Save to cache before returning
+	if len(response) > 0 {
+		jsonData, errMarshal := json.Marshal(response)
+		if errMarshal == nil {
+			ttl := time.Duration(config.Enviroments.RedisSameBrandDepartmentTTL) * time.Minute
+			errCacheSet := p.outPortCache.Set(ctx, cacheKey, string(jsonData), ttl)
+			if errCacheSet != nil {
+				log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Error saving to cache (key: %s): %v", cacheKey, errCacheSet))
+			} else {
+				log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Successfully saved to cache (key: %s) with TTL %v", cacheKey, ttl))
+			}
+		} else {
+			log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Error marshalling response for cache: %v", errMarshal))
 		}
 	}
 
