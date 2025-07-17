@@ -12,7 +12,7 @@ import (
 	sharedOutPorts "ftd-td-catalog-item-read-services/internal/shared/domain/ports/out"
 	"ftd-td-catalog-item-read-services/internal/shared/utils"
 	"sort"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -98,7 +98,7 @@ func (p *productsRelated) GetRelatedItems(
 	productsFromAlgolia, err := p.getProductsRelatedItemsFromAlgolia(
 		ctx,
 		countryID,
-		originalItem.IDSuggested,
+		strings.Trim(strings.Join(strings.Fields(fmt.Sprint(originalItem.IDSuggested)), ", "), "[]"),
 		itemID,
 		configProductsRelated,
 	)
@@ -201,7 +201,7 @@ func (p *productsRelated) getProductsRelated(ctx *gin.Context, countryID, itemID
 	return items[0], nil
 }
 
-func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, countryID, idSuggest, excludeItemID, configProductsRelated sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
+func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, countryID, idSuggest, excludeItemID string, configProductsRelated sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
 		if idStr, typeOk := id.(string); typeOk {
@@ -212,7 +212,7 @@ func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, c
 		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
 	}
 
-	query := fmt.Sprintf(configProductsRelated.QueryProducts, strconv.Itoa(configProductsRelated.CountItems), idSuggest)
+	query := fmt.Sprintf(configProductsRelated.QueryProducts, idSuggest)
 	// Asegurarse de que el header X-Custom-City se propaga
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
 
@@ -248,7 +248,7 @@ func saveProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Ca
 		return nil
 	}
 
-	cacheKey := fmt.Sprintf(keyRelatedProductsCache, countryID, itemID)
+	cacheKey := fmt.Sprintf(keyRelatedProductsCache, countryID, itemID, "")
 	dataToCache, errMarshal := json.Marshal(rs)
 	if errMarshal != nil {
 		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,

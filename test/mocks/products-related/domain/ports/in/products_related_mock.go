@@ -42,16 +42,16 @@ func (m *MockProductsRelated) EXPECT() *MockProductsRelatedMockRecorder {
 }
 
 // GetRelatedItems mocks base method.
-func (m *MockProductsRelated) GetRelatedItems(ctx *gin.Context, countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr string) (model.AlgoliaRelatedProductsResponse, error) {
+func (m *MockProductsRelated) GetRelatedItems(ctx *gin.Context, countryID, itemID string) ([]model.ProductsRelatedItem, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRelatedItems", ctx, countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr)
-	ret0, _ := ret[0].(model.AlgoliaRelatedProductsResponse)
+	ret := m.ctrl.Call(m, "GetRelatedItems", ctx, countryID, itemID)
+	ret0, _ := ret[0].([]model.ProductsRelatedItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRelatedItems indicates an expected call of GetRelatedItems.
-func (mr *MockProductsRelatedMockRecorder) GetRelatedItems(ctx, countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr any) *gomock.Call {
+func (mr *MockProductsRelatedMockRecorder) GetRelatedItems(ctx, countryID, itemID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelatedItems", reflect.TypeOf((*MockProductsRelated)(nil).GetRelatedItems), ctx, countryID, itemID, nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelatedItems", reflect.TypeOf((*MockProductsRelated)(nil).GetRelatedItems), ctx, countryID, itemID)
 }
