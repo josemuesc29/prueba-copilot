@@ -83,9 +83,9 @@ func (p *productsRelated) GetRelatedItems(
 		fmt.Sprintf(enums.GetData, "Success", fmt.Sprintf("%+v", configProductsRelated)))
 	originalItem, err := p.getProductsRelated(ctx, countryID, itemID)
 	if err != nil {
-		log.Errorf(enums.LogFormat, correlationID, GetRelatedItemsLog,
+		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,
 			fmt.Sprintf("Error getting original item's brand: %v", err))
-		return nil, err
+		return []model.ProductsRelatedItem{}, nil
 	}
 
 	if len(originalItem.IDSuggested) == 0 {
