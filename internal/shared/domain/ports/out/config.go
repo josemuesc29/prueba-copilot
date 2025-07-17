@@ -9,4 +9,5 @@ import (
 
 type ConfigOutPort interface {
 	GetConfigBestSeller(ctx *gin.Context, countryID, property string) (model.ConfigBestSeller, error)
+	GetConfigRelatedProducts(ctx *gin.Context, country, key string) (model.ConfigBestSeller, error)
 }

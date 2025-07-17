@@ -42,9 +42,8 @@ func NewProductsRelated(outPortCatalogProduct sharedOutPorts.CatalogProduct, out
 func (p *productsRelated) GetRelatedItems(
 	ctx *gin.Context,
 	countryID, itemID string,
-	nearbyStores, city, category, indexName, algoliaParamsStr string,
-) (model.AlgoliaRecommendResponse, error) {
-	var response model.AlgoliaRecommendResponse
+) ([]model.RelatedProductItem, error) {
+	var response []model.RelatedProductItem
 	correlationID := ""
 	if ctx != nil {
 		value, exists := ctx.Get(string(enums.HeaderCorrelationID))
@@ -55,43 +54,57 @@ func (p *productsRelated) GetRelatedItems(
 		}
 	}
 
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Getting related products for itemID: %s, category: %s, country: %s", itemID, category, countryID))
+	// Step 1: Get the main product's information
+	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Getting main product info for itemID: %s", itemID))
+	productsInfo, err := p.outPortCatalogProduct.GetProductsInformationByObjectID(ctx, []string{itemID}, countryID)
+	if err != nil {
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Error getting main product info: %v", err))
+		return nil, err
+	}
+	if len(productsInfo) == 0 {
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Main product with itemID: %s not found.", itemID))
+		return nil, fmt.Errorf("main product with itemID: %s not found", itemID)
+	}
+	mainProductInfo := productsInfo[0]
 
-	// For now, we are skipping the cache logic to focus on the new implementation.
+	// Step 2: Extract id_suggested
+	if len(mainProductInfo.SuggestedID) == 0 {
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("No suggested ID found for itemID: %s. Returning empty list.", itemID))
+		return response, nil // Return empty list as per decision
+	}
+	// Assuming we use the first suggested ID
+	suggestedID := mainProductInfo.SuggestedID[0]
+	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Found suggested ID: %d for itemID: %s", suggestedID, itemID))
 
-	recommendResponse, err := p.outPortCatalogProduct.GetRelatedProducts(ctx, itemID, category, countryID)
+	// Step 3: Get the configuration for the query
+	configKey := "RELATED-PRODUCTS.CONFIG" // The key for our new configuration
+	config, err := p.outPortConfig.GetConfigRelatedProducts(ctx, countryID, configKey)
+	if err != nil {
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Error getting related products config: %v", err))
+		// As a fallback, we could use a default query, but for now, we'll return an error.
+		return nil, err
+	}
+
+	// Step 4: Build and execute the query using the fetched config
+	finalQuery := fmt.Sprintf(config.QueryProducts, suggestedID)
+
+	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Querying Algolia with params: [%s]", finalQuery))
+	products, err := p.outPortCatalogProduct.GetProductsInformationByQuery(ctx, finalQuery, countryID)
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Error getting related products from Algolia: %v", err))
-		return response, err
+		return nil, err
 	}
+	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Received %d products from Algolia", len(products)))
 
-	// The new response structure is different, so we adapt.
-	// The response from GetRelatedProducts already contains the hits.
-	if len(recommendResponse.Results) > 0 {
-		// We assume the first result is the one we want, as per the request structure.
-		hits := recommendResponse.Results[0].Hits
-		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Received %d related products from Algolia Recommend", len(hits)))
-
-		var filteredProducts []sharedModel.ProductInformation
-		for _, product := range hits {
-			if p.shouldIncludeProduct(product, itemID) {
-				filteredProducts = append(filteredProducts, product)
-			}
+	// Step 5: Filter and map the response
+	for _, product := range products {
+		if p.shouldIncludeProduct(product, itemID) {
+			mappedItem := mappers.MapProductInformationToRelatedItem(&product)
+			response = append(response, mappedItem)
 		}
-		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Filtered products to %d items after shouldIncludeProduct", len(filteredProducts)))
-
-		// We need to decide how to present this. For now, let's just use the hits.
-		// The old response model `AlgoliaRelatedProductsResponse` is not compatible.
-		// We will return the new `AlgoliaRecommendResponse` directly.
-		recommendResponse.Results[0].Hits = filteredProducts
-		response = recommendResponse
-	} else {
-		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, "Received no results from Algolia Recommend")
 	}
 
-	// We can re-add caching logic here later if needed.
-
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, "Related items retrieved successfully")
+	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, "Related items retrieved and mapped successfully")
 	return response, nil
 }
 

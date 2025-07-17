@@ -60,3 +60,9 @@ func (t Config) GetConfigBestSeller(ctx *gin.Context, countryID, property string
 
 	return mappers.MapConfigDtoToConfigBestSeller(resp), err
 }
+
+func (c config) GetConfigRelatedProducts(ctx *gin.Context, country, key string) (model.ConfigBestSeller, error) {
+	// This logic is identical to GetConfigBestSeller, as it reads a key from the same config service.
+	// We are just satisfying the interface.
+	return c.GetConfigBestSeller(ctx, country, key)
+}

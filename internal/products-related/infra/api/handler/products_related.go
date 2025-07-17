@@ -48,13 +48,6 @@ func (h *productsRelatedHandler) GetRelatedItems(c *gin.Context) {
 		return
 	}
 
-	// Bind query parameters
-	if err := c.ShouldBindQuery(&reqDto); err != nil {
-		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, fmt.Sprintf("Error binding query parameters: %v", err))
-		sharedResponse.BadRequest(c, fmt.Sprintf("Invalid query parameters: %s", err.Error()))
-		return
-	}
-
 	log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog,
 		fmt.Sprintf("Calling application service with DTO: %+v", reqDto))
 
@@ -62,11 +55,11 @@ func (h *productsRelatedHandler) GetRelatedItems(c *gin.Context) {
 		c,
 		reqDto.CountryID,
 		reqDto.ItemID,
-		reqDto.NearbyStores,
-		reqDto.City,
-		reqDto.Category,
-		reqDto.IndexName,
-		reqDto.AlgoliaParams,
+		"", // nearbyStores - not used anymore
+		"", // city - not used anymore
+		"", // category - not used anymore
+		"", // indexName - not used anymore
+		"", // algoliaParams - not used anymore
 	)
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, fmt.Sprintf("Error from application service: %v", err))
