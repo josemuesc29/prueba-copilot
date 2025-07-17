@@ -26,7 +26,7 @@ const (
 	findRelatedInCacheLog                 = "ProductsRelatedService.findRelatedInCache"
 	repositoryProxyCatalogProduct         = "repository proxy catalog product"
 	indexCatalogProducts                  = "index catalog products"
-	keyRelatedProductsCache               = "related_%s_%s_%s" // countryID, itemID, paramsHash
+	keyRelatedProductsCache               = "related_%s_%s" // countryID, itemID
 	configProductsRelatedKey              = "PRODUCTS-RELATED.CONFIG"
 )
 
@@ -95,17 +95,25 @@ func (p *productsRelated) GetRelatedItems(
 		return []model.ProductsRelatedItem{}, nil
 	}
 
-	productsFromAlgolia, err := p.getProductsRelatedItemsFromAlgolia(
-		ctx,
-		countryID,
-		originalItem.IDSuggested,
-		itemID,
-		configProductsRelated,
-	)
-	if err != nil {
-		log.Errorf(enums.LogFormat, correlationID, getProductsRelatedItemsFromAlgoliaLog,
-			fmt.Sprintf("Error getting brand items from Algolia: %v", err))
-		return nil, err
+	var productsFromAlgolia []sharedModel.ProductInformation
+
+	for _, id := range originalItem.IDSuggested {
+		idSuggestStr := strconv.Itoa(id)
+
+		items, err := p.getProductsRelatedItemsFromAlgolia(
+			ctx,
+			countryID,
+			idSuggestStr,
+			itemID,
+			configProductsRelated,
+		)
+		if err != nil {
+			log.Warnf(enums.LogFormat, correlationID, getProductsRelatedItemsFromAlgoliaLog,
+				fmt.Sprintf("Failed for idSuggest=%s: %v", idSuggestStr, err))
+			continue
+		}
+
+		productsFromAlgolia = append(productsFromAlgolia, items...)
 	}
 
 	var processedItems []sharedModel.ProductInformation
@@ -201,7 +209,7 @@ func (p *productsRelated) getProductsRelated(ctx *gin.Context, countryID, itemID
 	return items[0], nil
 }
 
-func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, countryID, idSuggest, excludeItemID, configProductsRelated sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
+func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, countryID string, idSuggest string, excludeItemID string, configProductsRelated sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
 	var correlationID string
 	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
 		if idStr, typeOk := id.(string); typeOk {
