@@ -15,7 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -26,7 +25,7 @@ const (
 	findSameBrandInCacheLog       = "SameBrandService.findSameBrandInCache"
 	repositoryProxyCatalogProduct = "repository proxy catalog product"
 	indexCatalogProducts          = "index catalog products"
-	keySameBrandCache             = "same_brand_%s_%s" // countryID, itemID
+	keySameBrandCache             = "same_brands_%s_%s" // countryID, itemID
 	configSameBrandKey            = "SAME-BRAND.CONFIG"
 )
 
@@ -79,8 +78,7 @@ func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, sou
 	}
 
 	log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetItemsBySameBrandLog,
-		fmt.Sprintf(enums.GetData, "Success", configSameBrand))
-
+		fmt.Sprintf(enums.GetData, "Success", fmt.Sprintf("%+v", configSameBrand)))
 	originalItem, err := s.getItemBrand(ctx, countryID, itemID)
 	if err != nil {
 		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
@@ -167,31 +165,6 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 	if correlationID == "" {
 		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
 	}
-
-	var filters []string
-	if nearbyStores != "" {
-		stores := strings.Split(nearbyStores, ",")
-		var storeFilters []string
-		for _, store := range stores {
-			storeFilters = append(storeFilters, fmt.Sprintf("stock.fulfillment_stock.locations.store_id=%s", store))
-		}
-		filters = append(filters, "("+strings.Join(storeFilters, " OR ")+")")
-	} else if storeId != "" {
-		filters = append(filters, fmt.Sprintf("stock.fulfillment_stock.locations.store_id=%s", storeId))
-	} else {
-		filters = append(filters, "fulfillment_default_store_id=26")
-	}
-
-	if city != "" {
-		filters = append(filters, fmt.Sprintf("city_name='%s'", city))
-	}
-
-	if source != "" {
-		filters = append(filters, fmt.Sprintf("source='%s'", source))
-	}
-
-	filters = append(filters, fmt.Sprintf("brand='%s'", brand))
-	filters = append(filters, "stock>0")
 
 	query := fmt.Sprintf(configSameBrand.QueryProducts, strconv.Itoa(configSameBrand.CountItems), brand)
 	// Asegurarse de que el header X-Custom-City se propaga

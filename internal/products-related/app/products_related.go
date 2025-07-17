@@ -1,8 +1,6 @@
 package app
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"ftd-td-catalog-item-read-services/cmd/config"
@@ -12,8 +10,9 @@ import (
 	sharedModel "ftd-td-catalog-item-read-services/internal/shared/domain/model"
 	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
 	sharedOutPorts "ftd-td-catalog-item-read-services/internal/shared/domain/ports/out"
+	"ftd-td-catalog-item-read-services/internal/shared/utils"
+	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,165 +20,266 @@ import (
 )
 
 const (
-	GetRelatedItemsLog    = "ProductsRelatedService.GetRelatedItems"
-	findRelatedInCacheLog = "ProductsRelatedService.findRelatedInCache"
-	saveRelatedInCacheLog = "ProductsRelatedService.saveRelatedInCache"
-	keyRelatedCacheFormat = "related_%s_%s_%s" // countryID, itemID, paramsHash
+	GetRelatedItemsLog                    = "ProductsRelatedService.GetRelatedItems"
+	getItemProductRelatedLog              = "ProductsRelatedService.GetItemProductRelated"
+	getProductsRelatedItemsFromAlgoliaLog = "ProductsRelatedService.GetProductsRelatedItemsFromAlgolia"
+	findRelatedInCacheLog                 = "ProductsRelatedService.findRelatedInCache"
+	repositoryProxyCatalogProduct         = "repository proxy catalog product"
+	indexCatalogProducts                  = "index catalog products"
+	keyRelatedProductsCache               = "related_%s_%s_%s" // countryID, itemID, paramsHash
+	configProductsRelatedKey              = "PRODUCTS-RELATED.CONFIG"
 )
 
 type productsRelated struct {
 	outPortCatalogProduct sharedOutPorts.CatalogProduct
 	outPortCache          sharedOutPorts.Cache
+	outPortConfig         sharedOutPorts.ConfigOutPort
 }
 
-func NewProductsRelated(outPortCatalogProduct sharedOutPorts.CatalogProduct, outPortCache sharedOutPorts.Cache) inPorts.ProductsRelated {
+func NewProductsRelated(outPortCatalogProduct sharedOutPorts.CatalogProduct,
+	outPortCache sharedOutPorts.Cache,
+	outPortConfig sharedOutPorts.ConfigOutPort) inPorts.ProductsRelated {
 	return &productsRelated{
 		outPortCatalogProduct: outPortCatalogProduct,
 		outPortCache:          outPortCache,
+		outPortConfig:         outPortConfig,
 	}
 }
 
 func (p *productsRelated) GetRelatedItems(
 	ctx *gin.Context,
 	countryID, itemID string,
-	nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr string,
-) (model.AlgoliaRelatedProductsResponse, error) {
-	var response model.AlgoliaRelatedProductsResponse
-	correlationID := ""
-	if ctx != nil {
-		value, exists := ctx.Get(string(enums.HeaderCorrelationID))
-		if exists {
-			if id, ok := value.(string); ok {
-				correlationID = id
-			}
+) ([]model.ProductsRelatedItem, error) {
+	var productsRelatedItem model.ProductsRelatedItem
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
 		}
 	}
-
-	paramsKey := fmt.Sprintf("nearby:%s;city:%s;query:%s;index:%s;params:%s", nearbyStores, city, queryAlgolia, indexName, algoliaParamsStr)
-	hasher := sha256.New()
-	hasher.Write([]byte(paramsKey))
-	paramsHash := hex.EncodeToString(hasher.Sum(nil))
-	cacheKey := fmt.Sprintf(keyRelatedCacheFormat, countryID, itemID, paramsHash)
-
-	cachedData, err := p.outPortCache.Get(ctx, cacheKey)
-	if err == nil && cachedData != "" {
-		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Cache hit for key: %s", cacheKey))
-		if errUnmarshal := json.Unmarshal([]byte(cachedData), &response); errUnmarshal == nil {
-			return response, nil
-		} else {
-			log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Error unmarshalling cached data: %v", errUnmarshal))
-		}
-	} else if err != nil {
-		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Error getting from cache (key: %s): %v", cacheKey, err))
-	} else {
-		log.Printf(enums.LogFormat, correlationID, findRelatedInCacheLog, fmt.Sprintf("Cache miss for key: %s", cacheKey))
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
 	}
+	var rs []model.ProductsRelatedItem
 
-	var effectiveAlgoliaParams string
-	if queryAlgolia != "" {
-		effectiveAlgoliaParams = "query=" + queryAlgolia
+	// 1. Intenta obtener de la caché
+	err := findProductsRelatedInCache(ctx, p.outPortCache, countryID, itemID, &rs)
+	if err == nil && len(rs) > 0 {
+		log.Infof(enums.LogFormat, correlationID, GetRelatedItemsLog, "Successfully retrieved from cache")
+		return rs, nil
 	}
-
-	if algoliaParamsStr != "" {
-		if effectiveAlgoliaParams != "" {
-			effectiveAlgoliaParams = effectiveAlgoliaParams + "&" + algoliaParamsStr
-		} else {
-			effectiveAlgoliaParams = algoliaParamsStr
-		}
-	}
-
-	filterExclusion := fmt.Sprintf("NOT objectID:%s", itemID)
-	if strings.Contains(effectiveAlgoliaParams, "filters=") {
-		parts := strings.SplitN(effectiveAlgoliaParams, "filters=", 2)
-		filterAndRest := ""
-		if len(parts) > 1 {
-			filterAndRest = parts[1]
-		}
-		currentFiltersValue := ""
-		restOfParams := ""
-		ampersandIndex := strings.Index(filterAndRest, "&")
-		if ampersandIndex != -1 {
-			currentFiltersValue = filterAndRest[:ampersandIndex]
-			restOfParams = filterAndRest[ampersandIndex:]
-		} else {
-			currentFiltersValue = filterAndRest
-		}
-		newFilters := fmt.Sprintf("%s AND %s", currentFiltersValue, filterExclusion)
-		effectiveAlgoliaParams = fmt.Sprintf("%sfilters=%s%s", parts[0], newFilters, restOfParams)
-	} else {
-		if effectiveAlgoliaParams != "" {
-			effectiveAlgoliaParams = fmt.Sprintf("%s&filters=%s", effectiveAlgoliaParams, filterExclusion)
-		} else {
-			effectiveAlgoliaParams = fmt.Sprintf("filters=%s", filterExclusion)
-		}
-	}
-
-	finalAlgoliaQuery := effectiveAlgoliaParams
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Querying Algolia with params: [%s] for country: %s, itemID: %s", finalAlgoliaQuery, countryID, itemID))
-
-	products, err := p.outPortCatalogProduct.GetProductsInformationByQuery(ctx, finalAlgoliaQuery, countryID)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Error getting related products from Algolia: %v", err))
-		return model.AlgoliaRelatedProductsResponse{}, err
+		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Cache find error: %v", err))
 	}
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Received %d products from Algolia", len(products)))
+
+	configProductsRelated, err := p.outPortConfig.GetConfigBestSeller(ctx, countryID, configProductsRelatedKey)
+	if err != nil {
+		log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetRelatedItemsLog,
+			fmt.Sprintf(enums.GetData, "error", "repositoryConfig"))
+		return nil, err
+	}
+
+	log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetRelatedItemsLog,
+		fmt.Sprintf(enums.GetData, "Success", fmt.Sprintf("%+v", configProductsRelated)))
+	originalItem, err := p.getProductsRelated(ctx, countryID, itemID)
+	if err != nil {
+		log.Errorf(enums.LogFormat, correlationID, GetRelatedItemsLog,
+			fmt.Sprintf("Error getting original item's brand: %v", err))
+		return nil, err
+	}
+
+	if len(originalItem.IDSuggested) == 0 {
+		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,
+			fmt.Sprintf("id suggested not found for item %s", itemID))
+
+		return []model.ProductsRelatedItem{}, nil
+	}
+
+	productsFromAlgolia, err := p.getProductsRelatedItemsFromAlgolia(
+		ctx,
+		countryID,
+		originalItem.IDSuggested,
+		itemID,
+		configProductsRelated,
+	)
+	if err != nil {
+		log.Errorf(enums.LogFormat, correlationID, getProductsRelatedItemsFromAlgoliaLog,
+			fmt.Sprintf("Error getting brand items from Algolia: %v", err))
+		return nil, err
+	}
+
+	var processedItems []sharedModel.ProductInformation
+	for _, product := range productsFromAlgolia {
+		if p.shouldIncludeProduct(product) {
+			processedItems = append(processedItems, product)
+		}
+	}
+
+	sort.SliceStable(processedItems, func(i, j int) bool {
+		return len(processedItems[i].StoresWithStock) > len(processedItems[j].StoresWithStock)
+	})
+
+	for _, productInfo := range processedItems {
+		mappedItem := mappers.MapProductInformationToProductsRelatedItem(&productsRelatedItem, &productInfo)
+		rs = append(rs, mappedItem)
+	}
+
+	if len(rs) > 0 {
+		err = saveProductsRelatedInCache(ctx, p.outPortCache, countryID, itemID, rs)
+		if err != nil {
+			log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Cache save error: %v", err))
+		}
+	}
+
+	log.Infof(enums.LogFormat, correlationID, GetRelatedItemsLog, "Successfully retrieved and processed products related items")
+	return rs, nil
+}
+
+func findProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
+	countryID, itemID string, response *[]model.ProductsRelatedItem) error {
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
+	cacheKey := fmt.Sprintf(keyRelatedProductsCache, countryID, itemID)
+	cachedData, err := outPortCache.Get(ctx, cacheKey)
+
+	if err != nil {
+		log.Warnf(enums.LogFormat, correlationID, findRelatedInCacheLog,
+			fmt.Sprintf("Error getting from cache. Key: %s, Error: %v", cacheKey, err))
+		return err
+	}
+
+	if cachedData == "" {
+		log.Debugf(enums.LogFormat, correlationID, findRelatedInCacheLog,
+			fmt.Sprintf("Cache miss. Key: %s", cacheKey))
+		return nil
+	}
+
+	err = json.Unmarshal([]byte(cachedData), response)
+	if err != nil {
+		log.Warnf(enums.LogFormat, correlationID, findRelatedInCacheLog,
+			fmt.Sprintf("Error unmarshalling cached data. Key: %s, Error: %v", cacheKey, err))
+		return err
+	}
+
+	log.Debugf(enums.LogFormat, correlationID, findRelatedInCacheLog,
+		fmt.Sprintf("Successfully retrieved from cache. Key: %s", cacheKey))
+	return nil
+}
+
+func (p *productsRelated) getProductsRelated(ctx *gin.Context, countryID, itemID string) (sharedModel.ProductInformation, error) {
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
+	// Asegurarse de que el header X-Custom-City se propaga si está presente
+	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
+
+	items, err := p.outPortCatalogProduct.GetProductsInformationByObjectID(ctx, []string{itemID}, countryID)
+	if err != nil {
+		log.Errorf(enums.LogFormat, correlationID, getItemProductRelatedLog,
+			fmt.Sprintf("Error from CatalogProduct port: %v. Repo: %s", err, repositoryProxyCatalogProduct))
+		return sharedModel.ProductInformation{}, err
+	}
+
+	if len(items) == 0 {
+		log.Warnf(enums.LogFormat, correlationID, getItemProductRelatedLog, fmt.Sprintf("Item not found: %s", itemID))
+		return sharedModel.ProductInformation{}, fmt.Errorf("item not found: %s", itemID)
+	}
+
+	return items[0], nil
+}
+
+func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, countryID, idSuggest, excludeItemID, configProductsRelated sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
+
+	query := fmt.Sprintf(configProductsRelated.QueryProducts, strconv.Itoa(configProductsRelated.CountItems), idSuggest)
+	// Asegurarse de que el header X-Custom-City se propaga
+	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
+
+	products, err := p.outPortCatalogProduct.GetProductsInformationByQuery(ctx, query, countryID)
+	if err != nil {
+		log.Errorf(enums.LogFormat, correlationID, getProductsRelatedItemsFromAlgoliaLog,
+			fmt.Sprintf("Error from CatalogProduct port: %v. Query: '%s', Repo: %s", err, query, indexCatalogProducts))
+		return nil, err
+	}
 
 	var filteredProducts []sharedModel.ProductInformation
-	for _, product := range products {
-		if p.shouldIncludeProduct(product, itemID) {
-			filteredProducts = append(filteredProducts, product)
-		}
-	}
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Filtered products to %d items after shouldIncludeProduct", len(filteredProducts)))
-
-	currentPage := 0 // Default
-	currentHitsPerPage := len(filteredProducts)
-
-	queryParamsMap := parseQueryParams(finalAlgoliaQuery)
-	if pageStr, ok := queryParamsMap["page"]; ok {
-		if pageInt, errConv := strconv.Atoi(pageStr); errConv == nil {
-			currentPage = pageInt
-		}
-	}
-	if hppStr, ok := queryParamsMap["hitsPerPage"]; ok {
-		if hppInt, errConv := strconv.Atoi(hppStr); errConv == nil {
-			currentHitsPerPage = hppInt
+	for _, p := range products {
+		if p.ObjectID != excludeItemID {
+			filteredProducts = append(filteredProducts, p)
 		}
 	}
 
-	response = mappers.MapToAlgoliaRelatedProductsResponse(filteredProducts, queryAlgolia, currentPage, currentHitsPerPage)
-
-	jsonData, err := json.Marshal(response)
-	if err == nil {
-		errCacheSet := p.outPortCache.Set(ctx, cacheKey, string(jsonData), time.Duration(config.Enviroments.RedisSameBrandDepartmentTTL)*time.Minute)
-		if errCacheSet != nil {
-			log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Error saving to cache (key: %s): %v", cacheKey, errCacheSet))
-		} else {
-			log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Successfully saved to cache (key: %s)", cacheKey))
-		}
-	} else {
-		log.Printf(enums.LogFormat, correlationID, saveRelatedInCacheLog, fmt.Sprintf("Error marshalling response for cache: %v", err))
-	}
-
-	log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog, "Related items retrieved successfully")
-	return response, nil
+	return filteredProducts, nil
 }
 
-func (p *productsRelated) shouldIncludeProduct(product sharedModel.ProductInformation, originalItemID string) bool {
-	if product.ObjectID == originalItemID {
+func saveProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
+	countryID, itemID string, rs []model.ProductsRelatedItem) error {
+	var correlationID string
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			correlationID = idStr
+		}
+	}
+	if correlationID == "" {
+		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+	}
+	if len(rs) == 0 { // No guardar en caché si no hay resultados
+		return nil
+	}
+
+	cacheKey := fmt.Sprintf(keyRelatedProductsCache, countryID, itemID)
+	dataToCache, errMarshal := json.Marshal(rs)
+	if errMarshal != nil {
+		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,
+			fmt.Sprintf("Error marshalling data for cache. Key: %s, Error: %v", cacheKey, errMarshal))
+		return errMarshal
+	}
+
+	// Usar el TTL correcto de las variables de entorno
+	ttl := time.Duration(config.Enviroments.RedisProductsRelatedDepartmentTTL) * time.Minute
+	if ttl <= 0 {
+		ttl = 60 * time.Minute
+		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,
+			fmt.Sprintf("Invalid or missing RedisSameBrandTTL, using default: %v. Key: %s", ttl, cacheKey))
+	}
+
+	err := outPortCache.Set(ctx, cacheKey, string(dataToCache), ttl)
+	if err != nil {
+		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,
+			fmt.Sprintf("Error saving to cache. Key: %s, Error: %v", cacheKey, err))
+		return err
+	}
+
+	log.Debugf(enums.LogFormat, correlationID, GetRelatedItemsLog,
+		fmt.Sprintf("Successfully saved to cache. Key: %s, TTL: %v", cacheKey, ttl))
+	return nil
+}
+
+func (p *productsRelated) shouldIncludeProduct(product sharedModel.ProductInformation) bool {
+	if len(product.StoresWithStock) == 0 || product.Status != "A" {
 		return false
 	}
-	return product.HasStock && product.Status == "A"
-}
 
-func parseQueryParams(queryStr string) map[string]string {
-	params := make(map[string]string)
-	pairs := strings.Split(queryStr, "&")
-	for _, pair := range pairs {
-		kv := strings.SplitN(pair, "=", 2)
-		if len(kv) == 2 {
-			params[kv[0]] = kv[1]
-		}
-	}
-	return params
+	return true
 }

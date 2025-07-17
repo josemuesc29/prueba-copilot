@@ -1,57 +1,91 @@
 package response
 
-import (
-	"ftd-td-catalog-item-read-services/internal/shared/domain/model"
-)
-
-type ProductsRelatedResponseDto struct {
-	Results []AlgoliaResultDto `json:"results"`
+type Classification struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	TypeID   int    `json:"typeId"`
+	TypeName string `json:"typeName"`
 }
 
-type AlgoliaResultDto struct {
-	AppliedRules               interface{}                `json:"appliedRules"`
-	AppliedRelevancyStrictness int                        `json:"appliedRelevancyStrictness"`
-	AroundLatLng               string                     `json:"aroundLatLng"`
-	AutomaticRadius            string                     `json:"automaticRadius"`
-	ExhaustiveFacetsCount      bool                       `json:"exhaustiveFacetsCount"`
-	ExhaustiveNbHits           bool                       `json:"exhaustiveNbHits"`
-	Explain                    interface{}                `json:"explain"`
-	Extensions                 ExtensionsDto              `json:"extensions"`
-	Facets                     map[string]map[string]int  `json:"facets"`
-	FacetsStats                map[string]FacetStatDto    `json:"facets_stats"`
-	Hits                       []model.ProductInformation `json:"hits"`
-	HitsPerPage                int                        `json:"hitsPerPage"`
-	Index                      string                     `json:"index"`
-	IndexUsed                  string                     `json:"indexUsed"`
-	Length                     int                        `json:"length"`
-	Message                    string                     `json:"message"`
-	NbHits                     int                        `json:"nbHits"`
-	NbPages                    int                        `json:"nbPages"`
-	NbSortedHits               int                        `json:"nbSortedHits"`
-	Offset                     int                        `json:"offset"`
-	Page                       int                        `json:"page"`
-	Params                     string                     `json:"params"`
-	ParsedQuery                string                     `json:"parsedQuery"`
-	ProcessingTimeMS           int                        `json:"processingTimeMS"`
-	Query                      string                     `json:"query"`
-	QueryAfterRemoval          string                     `json:"queryAfterRemoval"`
-	QueryID                    string                     `json:"queryID"`
-	ServerUsed                 string                     `json:"serverUsed"`
-	TimeoutCounts              bool                       `json:"timeoutCounts"`
-	TimeoutHits                bool                       `json:"timeoutHits"`
-	UserData                   interface{}                `json:"userData"`
-	ABTestVariantID            int                        `json:"abTestVariantID"`
-	ABTestID                   int                        `json:"abTestID"`
-	RenderingContent           map[string]interface{}     `json:"renderingContent"`
+type CustomLabelForStockZeroByCity struct {
+	CityCode    string `json:"cityCode"`
+	CustomLabel string `json:"customLabel"`
 }
 
-type ExtensionsDto struct {
-	QueryCategorization map[string]interface{} `json:"queryCategorization"`
+type FullPriceByCity struct {
+	CityCode  string  `json:"cityCode"`
+	FullPrice float64 `json:"fullPrice"`
 }
 
-type FacetStatDto struct {
-	Min float64 `json:"min"`
-	Max float64 `json:"max"`
-	Avg float64 `json:"avg"`
-	Sum float64 `json:"sum"`
+type LastUpdate struct {
+	JobName   string `json:"jobName"`
+	TimeStamp int64  `json:"timeStamp"`
+}
+
+type ProductsRelatedResponse struct {
+	ID                            string                          `json:"id"`
+	MediaDescription              string                          `json:"mediaDescription"`
+	LargeDescription              string                          `json:"largeDescription"`
+	MediaImageUrl                 string                          `json:"mediaImageUrl"`
+	FullPrice                     float64                         `json:"fullPrice"`
+	Prime                         string                          `json:"Prime"`
+	RMSProvider                   string                          `json:"RMS_PROVIDER"`
+	Collections                   []string                        `json:"_collections"`
+	AnywaySelling                 bool                            `json:"anywaySelling"`
+	Barcode                       string                          `json:"barcode"`
+	BarcodeList                   []string                        `json:"barcodeList"`
+	Brand                         string                          `json:"brand"`
+	Categorie                     string                          `json:"categorie"`
+	Classification                []Classification                `json:"classification"`
+	CustomLabelForStockZero       string                          `json:"customLabelForStockZero"`
+	CustomLabelForStockZeroByCity []CustomLabelForStockZeroByCity `json:"customLabelForStockZeroByCity"`
+	CustomTag                     *string                         `json:"customTag"`
+	TotalStock                    int                             `json:"totalStock"`
+	DeliveryTime                  string                          `json:"deliveryTime"`
+	Departments                   []string                        `json:"departments"`
+	DesHiddenSEO                  *string                         `json:"desHiddenSEO"`
+	FullPriceByCity               []FullPriceByCity               `json:"fullPriceByCity"`
+	Generics                      bool                            `json:"genericos"`
+	GrayDescription               string                          `json:"grayDescription"`
+	HasStock                      bool                            `json:"hasStock"`
+	Highlight                     bool                            `json:"highlight"`
+	IDOffersGroup                 []int                           `json:"idOffersGroup"`
+	IDHighlights                  []int                           `json:"id_highlights"`
+	IDSuggested                   []int                           `json:"id_suggested"`
+	IsCupon                       int                             `json:"is_cupon"`
+	LabelPum                      string                          `json:"labelPum"`
+	LastUpdate                    LastUpdate                      `json:"lastUpdate"`
+	ListUrlImages                 []string                        `json:"listUrlImages"`
+	Marca                         string                          `json:"marca"`
+	MeasurePum                    float64                         `json:"measurePum"`
+	MetadesSEO                    *string                         `json:"metadesSEO"`
+	MetatituloSEO                 *string                         `json:"metatituloSEO"`
+	ObjectID                      string                          `json:"objectID"`
+	OfferDescription              string                          `json:"offerDescription"`
+	OfferEndDate                  int64                           `json:"offerEndDate"`
+	OfferPrice                    float64                         `json:"offerPrice"`
+	OfferPriceByCity              []interface{}                   `json:"offerPriceByCity"`
+	OfferStartDate                int64                           `json:"offerStartDate"`
+	OfferText                     string                          `json:"offerText"`
+	OnlyOnline                    bool                            `json:"onlyOnline"`
+	Outofstore                    bool                            `json:"outofstore"`
+	PrimeDescription              string                          `json:"primeDescription"`
+	PrimePrice                    float64                         `json:"primePrice"`
+	PrimeTextDiscount             string                          `json:"primeTextDiscount"`
+	RequirePrescription           bool                            `json:"requirePrescription"`
+	RmsClass                      string                          `json:"rms_class"`
+	RmsDeparment                  string                          `json:"rms_deparment"`
+	RmsGroup                      string                          `json:"rms_group"`
+	RmsSubclass                   string                          `json:"rms_subclass"`
+	Sales                         int64                           `json:"sales"`
+	Spaces                        int                             `json:"spaces"`
+	Status                        string                          `json:"status"`
+	StoresWithOffer               []int                           `json:"stores_with_offer"`
+	StoresWithPrimeOffer          []interface{}                   `json:"stores_with_prime_offer"`
+	StoresWithStock               []int                           `json:"stores_with_stock"`
+	SubCategory                   string                          `json:"subCategory"`
+	Supplier                      string                          `json:"supplier"`
+	TaxRate                       int                             `json:"taxRate"`
+	URL                           string                          `json:"url"`
+	UrlCanonical                  *string                         `json:"urlCanonical"`
 }
