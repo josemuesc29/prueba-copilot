@@ -33,6 +33,12 @@ const (
 	ComponentBestSellersByCategory            ComponentType = "BEST_SELLERS_BY_CATEGORY"
 	ComponentBannerBestSellersByCategoryRight ComponentType = "BANNER_BEST_SELLERS_BY_CATEGORY_RIGHT"
 	ComponentStores                           ComponentType = "STORES"
+	// Item Section Components
+	MainItem        ComponentType = "MAIN_ITEM"
+	ItemSEO         ComponentType = "ITEM_SEO"
+	ProductRelated  ComponentType = "PRODUCT-RELATED"
+	Bazaarvoice     ComponentType = "BAZAARVOICE"
+	SameBrand       ComponentType = "SAME-BRAND"
 )
 
 type UserType string

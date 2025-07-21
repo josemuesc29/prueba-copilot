@@ -1,0 +1,32 @@
+[
+  {
+    "label": "Item Principal",
+    "componentType": "MAIN_ITEM",
+    "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}",
+    "redirectUrl": ""
+  },
+  {
+    "label": "SEO",
+    "componentType": "ITEM_SEO",
+    "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/seo",
+    "redirectUrl": ""
+  },
+  {
+    "label": "Productos Relacionados",
+    "componentType": "PRODUCT-RELATED",
+    "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/product-related",
+    "redirectUrl": ""
+  },
+  {
+    "label": "Reseñas",
+    "componentType": "BAZAARVOICE",
+    "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/reviews",
+    "redirectUrl": ""
+  },
+  {
+    "label": "De la misma marca",
+    "componentType": "SAME-BRAND",
+    "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/same-brand",
+    "redirectUrl": ""
+  }
+]
