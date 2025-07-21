@@ -1,6 +1,9 @@
 package handler
 
 //go:generate mockgen -source=products_related.go -destination=../../../../../test/mocks/products-related/infra/api/handler/products_related_mock.go
+//go:generate mockgen -destination=../../../../../test/mocks/shared/domain/cache_mock.go -package=domain ftd-td-catalog-item-read-services/internal/shared/domain/ports/out Cache
+//go:generate mockgen -destination=../../../../../test/mocks/shared/domain/catalog_product_mock.go -package=domain ftd-td-catalog-item-read-services/internal/shared/domain/ports/out CatalogProduct
+//go:generate mockgen -destination=../../../../../test/mocks/shared/domain/config_out_port_mock.go -package=domain ftd-td-catalog-item-read-services/internal/shared/domain/ports/out ConfigOutPort
 
 import (
 	"fmt"

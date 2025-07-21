@@ -1,0 +1,228 @@
+[
+  {
+    "id": 1,
+    "title": "SECCION 1",
+    "components": [
+      {
+        "componentType": "MAIN_BANNER",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/banners/main-banners",
+        "label": null,
+        "labelColor": null,
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      },
+      {
+        "componentType": "TRENDS",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": null,
+        "label": "Tendencias",
+        "labelColor": "#E88000",
+        "active": true,
+        "visibleFor": ["LOGGED_IN"],
+        "position": 2
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "SECCION 2",
+    "components": [
+      {
+        "componentType": "SUGGESTS",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/carousel/suggest",
+        "label": "¡Hola! Estos te pueden interesar",
+        "labelColor": "#418FDE",
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "SECCION 3",
+    "components": [
+      {
+        "componentType": "FLASH_OFFERS",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/offer/flash",
+        "label": "Ofertas Flash",
+        "labelColor": "#FDD756",
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "SECCION 4",
+    "components": [
+      {
+        "componentType": "LAST_PURCHASES",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/customers/last-purchases",
+        "label": "Últimas compras",
+        "labelColor": "<span style='border-bottom: 0.5rem solid #418FDE; position: absolute;'>Últimas compras</span>",
+        "active": true,
+        "visibleFor": ["LOGGED_IN"],
+        "position": 1
+      },
+      {
+        "componentType": "FAVORITES",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/customers/favorite-items",
+        "label": "Tus favoritos",
+        "labelColor": "<span style='border-bottom: 0.5rem solid #418FDE; position: absolute;'>Tus favoritos</span>",
+        "active": true,
+        "visibleFor": ["LOGGED_IN"],
+        "position": 2
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "SECCION 5",
+    "components": [
+      {
+        "componentType": "CAROUSEL_BANNER",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/banners/secondary-banners/CARRUSEL_BANNER_FIRST",
+        "label": null,
+        "labelColor": null,
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "SECCION 6",
+    "components": [
+      {
+        "componentType": "RECENTLY_VIEWED",
+        "enableForPlatforms": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/customers/recently-viewed",
+        "label": "Continúa donde quedaste",
+        "labelColor": "#418FDE",
+        "active": true,
+        "visibleFor": ["LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "SECCION 7",
+    "components": [
+      {
+        "componentType": "SOCIAL_MEDIA_VIDEOS",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": null,
+        "label": "Conoce lo más popular",
+        "labelColor": "#E88000",
+        "active": false,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "SECCION 8",
+    "components": [
+      {
+        "componentType": "GROUP_CATEGORIES",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/catalog/r/{countryId}/v1/categories/active",
+        "label": null,
+        "labelColor": null,
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "title": "SECCION 9",
+    "components": [
+      {
+        "componentType": "BEST_SELLERS_BY_CATEGORY",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/catalog/r/{countryId}/v1/department/7/items/best-sellers",
+        "label": "Más vendidos cuidado personal",
+        "labelColor": "#63428F",
+        "active": false,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "title": "SECCION 10",
+    "components": [
+      {
+        "componentType": "CAROUSEL_BANNER",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/banners/secondary-banners/CAROUSEL_BANNER_SECOND",
+        "label": null,
+        "labelColor": null,
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "title": "SECCION 11",
+    "components": [
+      {
+        "componentType": "BEST_SELLERS_BY_CATEGORY",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/catalog/r/{countryId}/v1/department/5/items/best-sellers",
+        "label": "Más vendidos belleza",
+        "labelColor": "#B14497",
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "title": "SECCION 12",
+    "components": [
+      {
+        "componentType": "STORES",
+        "enableFor": ["IOS", "ANDROID", "RESPONSIVE"],
+        "redirectUrl": null,
+        "serviceUrl": "/home/r/{countryId}/v1/stores/explore-stores",
+        "label": "Explora nuestras tiendas",
+        "labelColor": "#FDD756",
+        "active": true,
+        "visibleFor": ["ANONYMOUS", "LOGGED_IN"],
+        "position": 1
+      }
+    ]
+  }
+]

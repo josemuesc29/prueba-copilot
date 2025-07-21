@@ -1,6 +1,6 @@
 package in
 
-//go:generate mockgen -source=products_related.go -destination=../../../../../test/mocks/products-related/domain/ports/in/products_related_mock.go
+//go:generate mockgen -source=products_related.go -destination=../../../../../test/mocks/products-related/domain/products_related_mock.go -package=domain
 
 import (
 	"ftd-td-catalog-item-read-services/internal/products-related/domain/model"

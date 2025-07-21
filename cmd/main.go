@@ -11,11 +11,11 @@ func main() {
 	container := dig.BuildContainer()
 
 	config.LoadEnviroments()
-
+	
 	err := container.Invoke(func(r *router.Router) {
 		router := router.SetupRouter(r)
 
-		if err := router.Run(":8081"); err != nil {
+		if err := router.Run(":8080"); err != nil {
 			log.Fatalf("Failed to start the server: %v", err)
 		}
 	})

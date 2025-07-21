@@ -1,0 +1,66 @@
+package mappers
+
+import (
+	"ftd-td-home-read-services/internal/carousel/domain/model"
+	sharedModel "ftd-td-home-read-services/internal/shared/domain/model"
+)
+
+func SuggestedCMSMapToSuggested(suggestedData model.SuggestedData, productInfo sharedModel.ProductInformation, storeGroupID int64) model.Suggested {
+	return model.Suggested{
+		ID:               suggestedData.ID,
+		FirstDescription: productInfo.OfferDescription,
+		OfferText:        productInfo.OfferText,
+		Type:             suggestedData.Type,
+		UrlImage:         productInfo.MediaImageUrl,
+		StartDate:        productInfo.OfferStartDate,
+		EndDate:          productInfo.OfferEndDate,
+		Position:         suggestedData.Position,
+		Action:           suggestedData.Action,
+		OrderingNumber:   suggestedData.OrderingNumber,
+		Product: model.Product{
+			MediaImageUrl:     productInfo.MediaImageUrl,
+			Description:       productInfo.MediaDescription,
+			FullPrice:         productInfo.FullPrice,
+			MediaDescription:  productInfo.MediaDescription,
+			Brand:             productInfo.Brand,
+			Sales:             productInfo.Sales,
+			DetailDescription: productInfo.GrayDescription,
+			OfferPrice:        productInfo.OfferPrice,
+			OfferDescription:  productInfo.OfferDescription,
+			ID:                productInfo.ID,
+			OfferText:         productInfo.OfferText,
+			IdStoreGroup:      storeGroupID,
+			Marca:             productInfo.Marca,
+			ObjectID:          productInfo.ObjectID,
+			OnlyOnline:        productInfo.OnlyOnline,
+			DeliveryTime:      productInfo.DeliveryTime,
+			Highlight:         productInfo.Highlight,
+			Generic:           productInfo.Generics,
+			LargeDescription:  productInfo.LargeDescription,
+			AnywaySelling:     productInfo.AnywaySelling,
+			Spaces:            productInfo.Spaces,
+			Status:            productInfo.Status,
+			TaxRate:           productInfo.TaxRate,
+			ListUrlImages:     productInfo.ListUrlImages,
+			MeasurePum:        productInfo.MeasurePum,
+			LabelPum:          productInfo.LabelPum,
+			HighlightsID:      productInfo.IDHighlights,
+			SuggestedID:       productInfo.IDSuggested,
+			Departments:       productInfo.Departments,
+			SubCategory:       productInfo.SubCategory,
+			Supplier:          productInfo.Supplier,
+			Outofstore:        productInfo.Outofstore,
+			OfferStartDate:    productInfo.OfferStartDate,
+			OfferEndDate:      productInfo.OfferEndDate,
+			PrimePrice:        productInfo.PrimePrice,
+			PrimeTextDiscount: productInfo.PrimeTextDiscount,
+			PrimeDescription:  productInfo.PrimeDescription,
+			RmsClass:          productInfo.RmsClass,
+			RmsDeparment:      productInfo.RmsDeparment,
+			RmsGroup:          productInfo.RmsGroup,
+			RmsSubclass:       productInfo.RmsSubclass,
+			WithoutStock:      productInfo.HasStock,
+			URL:               productInfo.URL,
+		},
+	}
+}
