@@ -2,59 +2,58 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	pkghttp "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/http"
+	"ftd-td-catalog-item-read-services/internal/shared/utils"
 	"ftd-td-catalog-item-read-services/internal/structure/domain/model"
 	"ftd-td-catalog-item-read-services/internal/structure/domain/ports/out"
+	apimodel "ftd-td-catalog-item-read-services/internal/structure/infra/adapters/cms/model/response"
+	nethttp "net/http"
+	"time"
+
+	"github.com/jinzhu/copier"
 )
 
-type itemStructureRepository struct{}
+const (
+	retryGetItemStructure   = 0
+	pathCmsGetItemStructure = "/v1/structures/item-detail"
+	getItemStructureLog     = "CmsItemStructureRepository.GetItemStructure"
+)
 
-func NewItemStructureRepository() out.ItemStructureRepository {
-	return &itemStructureRepository{}
+type cmsItemStructureRepository struct {
+	cmsBaseURL string
 }
 
-func stringPointer(s string) *string {
-	return &s
+func NewItemStructureRepository(cmsBaseURL string) out.ItemStructureRepository {
+	return &cmsItemStructureRepository{cmsBaseURL: cmsBaseURL}
 }
 
-func (r *itemStructureRepository) GetItemStructure(ctx context.Context, countryID string) ([]model.Component, error) {
-	// In a real scenario, this would fetch from a CMS.
-	// For this implementation, we return a hardcoded structure.
-	structure := []model.Component{
-		{
-			Label:         "Item Principal",
-			ComponentType: model.MainItemComponentType,
-			ServiceUrl:    stringPointer("/catalog-item/r/{countryId}/v1/items/{itemId}"),
-			Position:      1,
-			Active:        true,
-		},
-		{
-			Label:         "SEO",
-			ComponentType: model.ItemSeoComponentType,
-			ServiceUrl:    stringPointer("/catalog-item/r/{countryId}/v1/items/{itemId}/seo"),
-			Position:      2,
-			Active:        true,
-		},
-		{
-			Label:         "Productos Relacionados",
-			ComponentType: model.ProductRelatedComponentType,
-			ServiceUrl:    stringPointer("/catalog-item/r/{countryId}/v1/items/{itemId}/related"),
-			Position:      3,
-			Active:        true,
-		},
-		{
-			Label:         "Reseñas",
-			ComponentType: model.BazaarvoiceComponentType,
-			ServiceUrl:    stringPointer("/catalog-item/r/{countryId}/v1/items/{itemId}/reviews"),
-			Position:      4,
-			Active:        true,
-		},
-		{
-			Label:         "Misma Marca",
-			ComponentType: model.SameBrandComponentType,
-			ServiceUrl:    stringPointer("/catalog-item/r/{countryId}/v1/items/{itemId}/same-brand"),
-			Position:      5,
-			Active:        true,
-		},
+func (s *cmsItemStructureRepository) GetItemStructure(ctx context.Context, countryID string) ([]model.Component, error) {
+	var apiResponse []apimodel.Component
+	var structure []model.Component
+
+	url := fmt.Sprintf("%s%s", s.cmsBaseURL, pathCmsGetItemStructure)
+	headers := make(nethttp.Header)
+	headers.Set("countryId", countryID)
+
+	req := pkghttp.Requestor{
+		HttpMethod: nethttp.MethodGet,
+		MaxRetry:   retryGetItemStructure,
+		URL:        url,
+		Context:    ctx,
+		TTLTimeOut: 5 * time.Second,
+		Headers:    headers,
+	}
+
+	_, err := pkghttp.DoRequest(req, &apiResponse)
+	if err != nil {
+		utils.LogError(ctx, getItemStructureLog, fmt.Sprintf("Failed to get item structure from CMS: %v", err))
+		return nil, err
+	}
+
+	if err := copier.Copy(&structure, &apiResponse); err != nil {
+		utils.LogError(ctx, getItemStructureLog, fmt.Sprintf("Error mapping item structure response: %v", err))
+		return nil, err
 	}
 
 	return structure, nil

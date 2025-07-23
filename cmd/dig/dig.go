@@ -27,6 +27,8 @@ import (
 	structureRepository "ftd-td-catalog-item-read-services/internal/structure/infra/adapters/cms/repository"
 	structureGroup "ftd-td-catalog-item-read-services/internal/structure/infra/api/groups"
 	structureHandler "ftd-td-catalog-item-read-services/internal/structure/infra/api/handler"
+	"ftd-td-catalog-item-read-services/internal/structure/domain/ports/out"
+	"ftd-td-catalog-item-read-services/cmd/config"
 	"go.uber.org/dig"
 )
 
@@ -57,7 +59,11 @@ func BuildContainer() *dig.Container {
 		sharedCatalogCategoryRepository.NewCatalogCategory,
 		sharedCatalogProductsRepository.NewCatalogProduct,
 		sharedCacheRepository.NewCache,
-		structureRepository.NewItemStructureRepository,
+
+		// Item Structure Repository with dependencies
+		func() (out.ItemStructureRepository, error) {
+			return structureRepository.NewItemStructureRepository(config.Enviroments.ConfigReadHostUrl), nil
+		},
 
 		// Services
 		bestSellerService.NewBestSeller,
