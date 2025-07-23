@@ -2,12 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"ftd-td-home-read-services/internal/shared/domain/model/enums"
-	"ftd-td-home-read-services/internal/shared/infra/api/handler/dto/response"
-	"ftd-td-home-read-services/internal/shared/utils"
-	"ftd-td-home-read-services/internal/structure/domain/ports/in"
-	"ftd-td-home-read-services/internal/structure/infra/api/handler/dto/request"
-
+	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
+	"ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response"
+	"ftd-td-catalog-item-read-services/internal/shared/utils"
+	"ftd-td-catalog-item-read-services/internal/structure/domain/ports/in"
 	"github.com/gin-gonic/gin"
 )
 

@@ -20,7 +20,6 @@ import (
 	crmRepository "ftd-td-home-read-services/internal/structure/infra/adapters/http/crm/repository"
 	structureGroup "ftd-td-home-read-services/internal/structure/infra/api/groups"
 	structureHandler "ftd-td-home-read-services/internal/structure/infra/api/handler"
-	itemSectionRepository "ftd-td-home-read-services/internal/structure/infra/adapters/http"
 	bannerRepository "ftd-td-home-read-services/internal/banner/infra/adapters/http/cms/repository"
 	bannerGroup "ftd-td-home-read-services/internal/banner/infra/api/groups"
 	bannerHandler "ftd-td-home-read-services/internal/banner/infra/api/handler"
@@ -38,7 +37,6 @@ func BuildContainer() *dig.Container {
 		offerHandler.NewOfferHandler,
 		carouselhHandler.NewCarousel,
 		bannerHandler.NewBannerHandler,
-		structureHandler.NewItemSectionHandler,
 
 		// Groups
 		healthGroup.NewHealthGroup,
@@ -46,7 +44,6 @@ func BuildContainer() *dig.Container {
 		offerGroup.NewOfferGroup,
 		carouselGroup.NewCarousel,
 		bannerGroup.NewBannerGroup,
-		structureGroup.NewItemSectionGroup,
 
 		// Repository
 		structureRepository.NewStructureRepository,
@@ -56,14 +53,12 @@ func BuildContainer() *dig.Container {
 		catalogProductRepository.NewCatalogProduct,
 		cacheRepository.NewCache,
 		bannerRepository.NewBannerCmsRepository,
-		itemSectionRepository.NewItemSectionRepository,
 
 		// Services
 		appStructure.NewStructureService,
 		appOffer.NewOfferService,
 		appCarousel.NewCarousel,
 		appBanner.NewBannerService,
-		appStructure.NewItemSectionService,
 
 		// Router
 		router.NewRouter,

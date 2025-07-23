@@ -3,30 +3,35 @@
     "label": "Item Principal",
     "componentType": "MAIN_ITEM",
     "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}",
-    "redirectUrl": ""
+    "position": 1,
+    "active": true
   },
   {
     "label": "SEO",
     "componentType": "ITEM_SEO",
     "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/seo",
-    "redirectUrl": ""
+    "position": 2,
+    "active": true
   },
   {
     "label": "Productos Relacionados",
     "componentType": "PRODUCT-RELATED",
-    "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/product-related",
-    "redirectUrl": ""
+    "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/related",
+    "position": 3,
+    "active": true
   },
   {
     "label": "Reseñas",
     "componentType": "BAZAARVOICE",
     "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/reviews",
-    "redirectUrl": ""
+    "position": 4,
+    "active": true
   },
   {
-    "label": "De la misma marca",
+    "label": "Misma Marca",
     "componentType": "SAME-BRAND",
     "serviceUrl": "/catalog-item/r/{countryId}/v1/items/{itemId}/same-brand",
-    "redirectUrl": ""
+    "position": 5,
+    "active": true
   }
 ]

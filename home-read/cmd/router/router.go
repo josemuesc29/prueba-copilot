@@ -14,29 +14,26 @@ import (
 const basePath = "/home/r/:countryId/v1"
 
 type Router struct {
-	healthGroup      groups.HealthGroup
-	strucutureGroup  structureGroup.StructureGroup
-	itemSectionGroup structureGroup.ItemSectionGroup
-	offerGroup       offerGroup.Group
-	carouselGroup    carouselGroup.Carousel
-	bannerGroup      bannerGroup.BannerGroup
+	healthGroup     groups.HealthGroup
+	strucutureGroup structureGroup.StructureGroup
+	offerGroup      offerGroup.Group
+	carouselGroup   carouselGroup.Carousel
+	bannerGroup     bannerGroup.BannerGroup
 }
 
 func NewRouter(
 	healthGroup groups.HealthGroup,
 	structureGroup structureGroup.StructureGroup,
-	itemSectionGroup structureGroup.ItemSectionGroup,
 	offerGroup offerGroup.Group,
 	carouselGroup carouselGroup.Carousel,
 	bannerGroup bannerGroup.BannerGroup,
 ) *Router {
 	return &Router{
-		healthGroup:      healthGroup,
-		strucutureGroup:  structureGroup,
-		itemSectionGroup: itemSectionGroup,
-		offerGroup:       offerGroup,
-		carouselGroup:    carouselGroup,
-		bannerGroup:      bannerGroup,
+		healthGroup:     healthGroup,
+		strucutureGroup: structureGroup,
+		offerGroup:      offerGroup,
+		carouselGroup:   carouselGroup,
+		bannerGroup:     bannerGroup,
 	}
 }
 
@@ -49,7 +46,6 @@ func SetupRouter(r *Router) *gin.Engine {
 
 	r.healthGroup.Source(router.Group(basePath))
 	r.strucutureGroup.Source(validatedGroup)
-	r.itemSectionGroup.Source(router.Group(""))
 	r.offerGroup.Source(validatedGroup)
 	r.carouselGroup.Source(validatedGroup)
 	r.bannerGroup.Source(validatedGroup)
