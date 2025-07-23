@@ -1,5 +1,7 @@
 package handler
 
+//go:generate mockgen -source=handler.go -destination=../../../../../test/mocks/structure/infra/api/handler/handler_mock.go
+
 import (
 	"fmt"
 	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
