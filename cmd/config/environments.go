@@ -19,6 +19,7 @@ type configEnv struct {
 	RedisSameBrandDepartmentTTL       int64  `env:"REDIS_SAME_BRAND_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
 	RedisProductsRelatedDepartmentTTL int64  `env:"REDIS_PRODUCTS_RELATED_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
 	RedisItemDetailTTL           int64  `env:"REDIS_ITEM_DETAIL_TTL" default:"720" usage:"ttl for item detail cache in redis"`
+	RedisItemStructureTTL        int64  `env:"REDIS_ITEM_STRUCTURE_TTL" default:"720" usage:"ttl for item structure cache in redis"`
 	DbHost                            string `env:"DB_HOST" default:"localhost" usage:"host for database"`
 	DbPort                            string `env:"DB_PORT" default:"5432" usage:"port for database"`
 	DbUser                            string `env:"DB_USER" default:"postgres" usage:"user for database"`
