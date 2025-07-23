@@ -24,7 +24,7 @@ import (
 	sharedCatalogProductsRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/http/catalog_products/repository"
 	sharedConfigRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/http/config/repository"
 	structureService "ftd-td-catalog-item-read-services/internal/structure/app"
-	structureRepository "ftd-td-catalog-item-read-services/internal/structure/infra/adapters/http"
+	structureRepository "ftd-td-catalog-item-read-services/internal/structure/infra/adapters/cms/repository"
 	structureGroup "ftd-td-catalog-item-read-services/internal/structure/infra/api/groups"
 	structureHandler "ftd-td-catalog-item-read-services/internal/structure/infra/api/handler"
 	"go.uber.org/dig"
