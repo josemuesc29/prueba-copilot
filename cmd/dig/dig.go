@@ -27,6 +27,9 @@ import (
 	structureRepository "ftd-td-catalog-item-read-services/internal/structure/infra/adapters/http/cms/repository"
 	structureGroup "ftd-td-catalog-item-read-services/internal/structure/infra/api/groups"
 	structureHandler "ftd-td-catalog-item-read-services/internal/structure/infra/api/handler"
+	totalStockService "ftd-td-catalog-item-read-services/internal/totalstock/app"
+	totalStockGroup "ftd-td-catalog-item-read-services/internal/totalstock/infra/api/groups"
+	totalStockHandler "ftd-td-catalog-item-read-services/internal/totalstock/infra/api/handler"
 	"go.uber.org/dig"
 )
 
@@ -41,6 +44,7 @@ func BuildContainer() *dig.Container {
 		productsRelatedHandler.NewProductsRelatedHandler,
 		detailHandler.NewDetailHandler,
 		structureHandler.NewItemStructureHandler,
+		totalStockHandler.NewTotalStockHandler,
 		// Groups
 		healthGroup.NewHealthGroup,
 		bestSellerGroup.NewBestSeller,
@@ -48,6 +52,7 @@ func BuildContainer() *dig.Container {
 		productsRelatedGroup.NewProductsRelatedGroup,
 		detailGroup.NewDetailGroup,
 		structureGroup.NewStructureGroup,
+		totalStockGroup.NewTotalStockGroup,
 		// Database
 		configDatabase.NewPostgresConnection,
 
@@ -65,6 +70,7 @@ func BuildContainer() *dig.Container {
 		productsRelatedService.NewProductsRelated,
 		detailService.NewItemDetail,
 		structureService.NewItemStructureService,
+		totalStockService.NewTotalStockService,
 		// Router
 		router.NewRouter,
 
