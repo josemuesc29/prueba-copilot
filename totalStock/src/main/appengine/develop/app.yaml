@@ -1,0 +1,9 @@
+service: shopping-cart
+env: standard
+runtime: java17
+instance_class: F2
+#Dev Domicilios Farmatodo
+vpc_access_connector:
+  name: "projects/dev-domicilios-farmatodo/locations/us-east4/connectors/ftdnetworkvpc"
+env_variables:
+  SPRING_PROFILES_ACTIVE: "develop"

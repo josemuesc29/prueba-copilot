@@ -1,0 +1,223 @@
+spring:
+  application:
+    name: ftd-services-shopping-cart
+
+---
+growthbook:
+  api-key: ${GROWTHBOOK_API_KEY}
+growthbook-api-rest:
+  bearer-token: ${BEARER_TOKEN}
+sip-service:
+  base-url: ${SIP_SERVICE_BASE_URL}
+  codigo-unico: ${SIP_SERVICE_UNIQUE_CODE}
+  usuario: ${SIP_SERVICE_USER}
+  clave: ${SIP_SERVICE_PASSWORD}
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    name: Delivery20Pool
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: ${URL_DB_SHOPPING_CART}
+    username: ${USER_DB_SHOPPING_CART}
+    password: ${PASS_DB_SHOPPING_CART}
+    hikari:
+      connection-timeout: 30000 # maximum number of milliseconds that a client will wait for a connection
+      minimum-idle: 1 # minimum number of idle connections maintained by HikariCP in a connection pool
+      maximum-pool-size: 50 # maximum pool size
+      idle-timeout: 1800000 # maximum idle time for connection
+      max-lifetime: 1800000 # maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      auto-commit: true # default auto-commit behavior.
+      data-source-properties:
+        oracle.jdbc.ReadTimeout: 20000
+  jpa:
+    database: default
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    open-in-view: false
+    show-sql: false
+  devtools:
+    add-properties: true
+    restart:
+      enabled: true
+  mvc:
+    converters:
+      preferred-json-mapper: gson
+server:
+  port: ${PORT:8088}
+logging:
+  level:
+    root: INFO
+    co:
+      farmatodo:
+        cv: DEBUG
+    com:
+      zaxxer:
+        hikari:
+          HikariConfig: DEBUG
+    org:
+      springframework:
+        web: INFO
+      hibernate: INFO
+configuration:
+  properties:
+    time-zone: GMT-5
+    fixedrate:
+      milliseconds: 1800000
+redis:
+  host: 10.52.133.227
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: develop
+  datasource:
+    name: Delivery20Pool
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: ${URL_DB_SHOPPING_CART}
+    username: ${USER_DB_SHOPPING_CART}
+    password: ${PASS_DB_SHOPPING_CART}
+  jpa:
+    database: default
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    open-in-view: false
+    show-sql: false
+  mvc:
+    converters:
+      preferred-json-mapper: gson
+logging:
+  level:
+    root: INFO
+    co:
+      farmatodo:
+        cv: DEBUG
+    org:
+      springframework:
+        web: INFO
+      hibernate: INFO
+configuration:
+  properties:
+    fixedrate:
+      milliseconds: 1800000
+redis:
+  host: 10.52.133.227
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: sandbox
+  datasource:
+    name: Delivery20Pool
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: ${URL_DB_SHOPPING_CART}
+    username: ${USER_DB_SHOPPING_CART}
+    password: ${PASS_DB_SHOPPING_CART}
+    hikari:
+      connection-timeout: 30000 # maximum number of milliseconds that a client will wait for a connection
+      minimum-idle: 1 # minimum number of idle connections maintained by HikariCP in a connection pool
+      maximum-pool-size: 50 # maximum pool size
+      idle-timeout: 10000 # maximum idle time for connection
+      max-lifetime: 1800000 # maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      auto-commit: true # default auto-commit behavior.
+  jpa:
+    database: default
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    open-in-view: false
+    show-sql: false
+  cloud:
+    gcp:
+      logging:
+        enabled: true
+  devtools:
+    add-properties: false
+    restart:
+      enabled: false
+  mvc:
+    converters:
+      preferred-json-mapper: gson
+cxf:
+  path: /soap-adapter/ws
+logging:
+  level:
+    root: INFO
+    co:
+      farmatodo:
+        cv: INFO
+    com:
+      zaxxer:
+        hikari:
+          HikariConfig: DEBUG
+    org:
+      springframework: INFO
+      hibernate: INFO
+configuration:
+  properties:
+    time-zone: GMT-5
+    fixedrate:
+      milliseconds: 1800000
+redis:
+  host: 10.52.133.227
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: production
+  datasource:
+    name: Delivery20Pool
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: ${URL_DB_SHOPPING_CART}
+    username: ${USER_DB_SHOPPING_CART}
+    password: ${PASS_DB_SHOPPING_CART}
+    hikari:
+      connection-timeout: 30000 # maximum number of milliseconds that a client will wait for a connection
+      minimum-idle: 1 # minimum number of idle connections maintained by HikariCP in a connection pool
+      maximum-pool-size: 50 # maximum pool size
+      idle-timeout: 10000 # maximum idle time for connection
+      max-lifetime: 1800000 # maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      auto-commit: true # default auto-commit behavior.
+  jpa:
+    database: default
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    open-in-view: false
+    show-sql: false
+  cloud:
+    gcp:
+      logging:
+        enabled: true
+  devtools:
+    add-properties: false
+    restart:
+      enabled: false
+  mvc:
+    converters:
+      preferred-json-mapper: gson
+cxf:
+  path: /soap-adapter/ws
+logging:
+  level:
+    root: INFO
+    co:
+      farmatodo:
+        cv: INFO
+    com:
+      zaxxer:
+        hikari:
+          HikariConfig: DEBUG
+    org:
+      springframework: INFO
+      hibernate: INFO
+configuration:
+  properties:
+    time-zone: GMT-5
+    fixedrate:
+      milliseconds: 1800000
+redis:
+  host: 10.52.133.227

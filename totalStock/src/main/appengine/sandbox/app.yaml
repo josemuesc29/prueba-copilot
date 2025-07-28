@@ -1,0 +1,9 @@
+service: shopping-cart
+env: standard
+runtime: java17
+instance_class: F4
+#Sandbox
+vpc_access_connector:
+  name: "projects/sandbox-domicilios-farmatodo/locations/us-east4/connectors/ftdnetworkvpc4"
+env_variables:
+  SPRING_PROFILES_ACTIVE: "sandbox"

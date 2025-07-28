@@ -1,0 +1,14 @@
+service: shopping-cart
+env: standard
+runtime: java17
+instance_class: F4_1G
+inbound_services:
+  - warmup
+automatic_scaling:
+  max_instances: 10
+  target_cpu_utilization: 0.7
+  target_throughput_utilization: 0.7
+vpc_access_connector:
+  name: "projects/stunning-base-164402/locations/us-central1/connectors/ftdnetworkvpc"
+env_variables:
+  SPRING_PROFILES_ACTIVE: "production"
