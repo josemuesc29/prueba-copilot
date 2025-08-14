@@ -34,11 +34,11 @@ func (h *handler) GetProductDetail(c *gin.Context) {
 
 	c.Set(enums.HeaderCorrelationID, correlationID)
 	c.Writer.Header().Set(enums.HeaderCorrelationID, correlationID)
-	log.Printf(enums.LogFormat, correlationID, service, enums.ReadDataFromContext)
+	log.Infof(enums.LogFormat, correlationID, service, enums.ReadDataFromContext)
 
 	itemDetail, err := h.detailInPort.GetDetailProduct(c)
 	if err != nil {
-		log.Printf(enums.LogFormat, correlationID, service, fmt.Sprintf("Error in GetDetailProduct: %v", err))
+		log.Infof(enums.LogFormat, correlationID, service, fmt.Sprintf("Error in GetDetailProduct: %v", err))
 		response.ConflictError(c, "No fue posible obtener el detalle del producto")
 		return
 	}

@@ -8,5 +8,5 @@ import (
 )
 
 type SameBrand interface {
-	GetItemsBySameBrand(c *gin.Context, countryID, itemID, source, nearbyStores, storeId, city string) ([]model.SameBrandItem, error)
+	GetItemsBySameBrand(c *gin.Context, countryID, itemID string) ([]model.SameBrandItem, error)
 }

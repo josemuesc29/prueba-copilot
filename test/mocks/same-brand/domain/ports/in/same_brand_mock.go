@@ -42,16 +42,16 @@ func (m *MockSameBrand) EXPECT() *MockSameBrandMockRecorder {
 }
 
 // GetItemsBySameBrand mocks base method.
-func (m *MockSameBrand) GetItemsBySameBrand(c *gin.Context, countryID, itemID, source, nearbyStores, storeId, city string) ([]model.SameBrandItem, error) {
+func (m *MockSameBrand) GetItemsBySameBrand(c *gin.Context, countryID, itemID string) ([]model.SameBrandItem, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetItemsBySameBrand", c, countryID, itemID, source, nearbyStores, storeId, city)
+	ret := m.ctrl.Call(m, "GetItemsBySameBrand", c, countryID, itemID)
 	ret0, _ := ret[0].([]model.SameBrandItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetItemsBySameBrand indicates an expected call of GetItemsBySameBrand.
-func (mr *MockSameBrandMockRecorder) GetItemsBySameBrand(c, countryID, itemID, source, nearbyStores, storeId, city any) *gomock.Call {
+func (mr *MockSameBrandMockRecorder) GetItemsBySameBrand(c, countryID, itemID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetItemsBySameBrand", reflect.TypeOf((*MockSameBrand)(nil).GetItemsBySameBrand), c, countryID, itemID, source, nearbyStores, storeId, city)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetItemsBySameBrand", reflect.TypeOf((*MockSameBrand)(nil).GetItemsBySameBrand), c, countryID, itemID)
 }

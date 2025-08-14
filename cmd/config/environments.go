@@ -19,13 +19,15 @@ type configEnv struct {
 	RedisBestSellerDepartmentTTL      int64  `env:"REDIS_BEST_SELLER_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
 	RedisSameBrandDepartmentTTL       int64  `env:"REDIS_SAME_BRAND_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
 	RedisProductsRelatedDepartmentTTL int64  `env:"REDIS_PRODUCTS_RELATED_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
+	MaxItemsSubstitute                int    `env:"MAX_ITEMS_SUBSTITUTE"  default:"100" usage:"max substitute for products"`
 	RedisItemDetailTTL                int64  `env:"REDIS_ITEM_DETAIL_TTL" default:"720" usage:"ttl for item detail cache in redis"`
 	RedisItemStructureTTL             int64  `env:"REDIS_ITEM_STRUCTURE_TTL" default:"720" usage:"ttl for items structure  cache in redis"`
+	RedisTextSeoTTL                   int64  `env:"REDIS_TEXT_SEO_TTL" default:"720" usage:"ttl for text seo cache in redis"`
 	DbHost                            string `env:"DB_HOST" default:"localhost" usage:"host for database"`
-	DbPort                            string `env:"DB_PORT" default:"5432" usage:"port for database"`
+	DbPort                            string `env:"DB_PORT" default:"5003" usage:"port for database"`
 	DbUser                            string `env:"DB_USER" default:"postgres" usage:"user for database"`
 	DbPassword                        string `env:"DB_PASSWORD" default:"admin" usage:"password for database"`
-	DbName                            string `env:"DB_NAME" default:"postgres" usage:"name for database"`
+	DbName                            string `env:"DB_NAME" default:"catalog_db" usage:"name for database"`
 	DbSSLMode                         string `env:"DB_SSLMODE" default:"disable" usage:"ssl mode for database"`
 	DbTimeZone                        string `env:"DB_TIMEZONE" default:"America/Bogota" usage:"timezone for database"`
 }

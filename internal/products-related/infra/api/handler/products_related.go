@@ -13,8 +13,6 @@ import (
 	"ftd-td-catalog-item-read-services/internal/shared/domain/model/enums"
 	sharedResponse "ftd-td-catalog-item-read-services/internal/shared/infra/api/handler/dto/response" // Renamed to avoid conflict
 	"ftd-td-catalog-item-read-services/internal/shared/utils"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -68,5 +66,5 @@ func (h *productsRelatedHandler) GetRelatedItems(c *gin.Context) {
 	responseDto := mappers.ModelProductsRelatedItemListToProductsRelatedItemDtoList(domainResponse)
 
 	log.Printf(enums.LogFormat, correlationID, getRelatedItemsHandlerLog, "Successfully retrieved and mapped related items")
-	c.JSON(http.StatusOK, responseDto)
+	sharedResponse.Ok(c, responseDto)
 }

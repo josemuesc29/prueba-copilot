@@ -122,6 +122,42 @@ func (t CatalogProduct) GetProductsInformationByQuery(c *gin.Context, params str
 	return mappers.CatalogProductsInformationToCarouselProductInformationList(resp.Results[0].Hits), err
 }
 
+func (t CatalogProduct) GetProductsInformationByQueryRelated(c *gin.Context, params string, countryID string, queryDescription string) ([]model.ProductInformation, error) {
+	var resp response.CatalogProductsInformationByQuery
+
+	body := request.CatalogByQuery{
+		Requests: []request.Query{
+			{
+				Query:     queryDescription,
+				IndexName: enums.CountryIndexName[countryID],
+				Params:    params,
+			},
+		},
+	}
+
+	url := fmt.Sprintf(urlCatalogProductsByQuery, config.Enviroments.CatalogProductsUrl)
+	log.Println("URL Catalog Products by Query:", url)
+
+	_, err := pkgHttp.DoRequest(
+		pkgHttp.Requestor{
+			HttpMethod: http.MethodPost,
+			MaxRetry:   retry,
+			Backoff:    5 * time.Second,
+			TTLTimeOut: 3 * time.Second,
+			URL:        url,
+			Body:       body,
+			Headers: http.Header{
+				headerContentType:   {contentTypeValueJson},
+				headerAlgoliaApiKey: {config.Enviroments.ApiKeyCatalogProducts},
+				headerAlgoliaAppID:  {config.Enviroments.ApplicationIDCatalogProducts},
+			},
+			Context: c,
+		},
+		&resp)
+
+	return mappers.CatalogProductsInformationToCarouselProductInformationList(resp.Results[0].Hits), err
+}
+
 func getRequetsByProducts(products []string, countryID string) request.RqCatalogProductsIndexByObjects {
 	var req request.RqCatalogProductsIndexByObjects
 

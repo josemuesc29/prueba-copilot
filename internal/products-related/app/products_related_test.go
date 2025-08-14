@@ -31,10 +31,30 @@ func TestProductsRelated_GetRelatedItems(t *testing.T) {
 
 	service := NewProductsRelated(mockCatalogProduct, mockCache, mockConfig)
 
-	t.Run("should return an error when there is a problem with get config", func(t *testing.T) {
+	t.Run("should return an empty list when there is a problem with get products from algolia", func(t *testing.T) {
 		// Given
 		mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).Return("", nil)
-		mockConfig.EXPECT().GetConfigBestSeller(gomock.Any(), gomock.Any(), gomock.Any()).Return(sharedModel.ConfigBestSeller{}, errors.New("error getting config"))
+		mockConfig.EXPECT().GetConfigBestSeller(gomock.Any(), gomock.Any(), gomock.Any()).Return(sharedModel.ConfigBestSeller{
+			CountItems:    3,
+			QueryProducts: "%d_%s",
+		}, nil)
+		mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]sharedModel.ProductInformation{
+			{ObjectID: "123", MediaDescription: "Producto Crema Facial"},
+		}, nil)
+		mockCatalogProduct.EXPECT().GetProductsInformationByQueryRelated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error getting products from algolia")).AnyTimes()
+
+		// When
+		result, err := service.GetRelatedItems(ctx, "co", "123")
+
+		// Then
+		assert.NoError(t, err)
+		assert.Empty(t, result)
+	})
+
+	t.Run("should return an error when there is a problem with get client", func(t *testing.T) {
+		// Given
+		mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).Return("", nil)
+		mockConfig.EXPECT().GetConfigBestSeller(gomock.Any(), gomock.Any(), gomock.Any()).Return(sharedModel.ConfigBestSeller{}, errors.New("error getting client"))
 
 		// When
 		result, err := service.GetRelatedItems(ctx, "co", "123")
@@ -72,18 +92,4 @@ func TestProductsRelated_GetRelatedItems(t *testing.T) {
 		assert.Empty(t, result)
 	})
 
-	t.Run("should return an empty list when there is a problem with get products from algolia", func(t *testing.T) {
-		// Given
-		mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).Return("", nil)
-		mockConfig.EXPECT().GetConfigBestSeller(gomock.Any(), gomock.Any(), gomock.Any()).Return(sharedModel.ConfigBestSeller{}, nil)
-		mockCatalogProduct.EXPECT().GetProductsInformationByObjectID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]sharedModel.ProductInformation{{IDSuggested: []int{1}}}, nil)
-		mockCatalogProduct.EXPECT().GetProductsInformationByQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error getting products from algolia"))
-
-		// When
-		result, err := service.GetRelatedItems(ctx, "co", "123")
-
-		// Then
-		assert.NoError(t, err)
-		assert.Empty(t, result)
-	})
 }

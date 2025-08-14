@@ -36,9 +36,11 @@ type productsRelated struct {
 	outPortConfig         sharedOutPorts.ConfigOutPort
 }
 
-func NewProductsRelated(outPortCatalogProduct sharedOutPorts.CatalogProduct,
+func NewProductsRelated(
+	outPortCatalogProduct sharedOutPorts.CatalogProduct,
 	outPortCache sharedOutPorts.Cache,
-	outPortConfig sharedOutPorts.ConfigOutPort) inPorts.ProductsRelated {
+	outPortConfig sharedOutPorts.ConfigOutPort,
+) inPorts.ProductsRelated {
 	return &productsRelated{
 		outPortCatalogProduct: outPortCatalogProduct,
 		outPortCache:          outPortCache,
@@ -50,110 +52,119 @@ func (p *productsRelated) GetRelatedItems(
 	ctx *gin.Context,
 	countryID, itemID string,
 ) ([]model.ProductsRelatedItem, error) {
-	var productsRelatedItem model.ProductsRelatedItem
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
-	var rs []model.ProductsRelatedItem
+	correlationID := getCorrelationIDFromContext(ctx)
 
-	// 1. Intenta obtener de la caché
-	err := findProductsRelatedInCache(ctx, p.outPortCache, countryID, itemID, &rs)
-	if err == nil && len(rs) > 0 {
-		log.Infof(enums.LogFormat, correlationID, GetRelatedItemsLog, "Successfully retrieved from cache")
+	// 1. Intentar desde caché
+	if rs, ok := p.getFromCache(ctx, countryID, itemID, correlationID); ok {
 		return rs, nil
 	}
-	if err != nil {
-		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Cache find error: %v", err))
-	}
 
+	// 2. Configuración
 	configProductsRelated, err := p.outPortConfig.GetConfigBestSeller(ctx, countryID, configProductsRelatedKey)
 	if err != nil {
-		log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetRelatedItemsLog,
+		log.Printf(enums.LogFormat, correlationID, GetRelatedItemsLog,
 			fmt.Sprintf(enums.GetData, "error", "repositoryConfig"))
 		return nil, err
 	}
 
-	log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetRelatedItemsLog,
-		fmt.Sprintf(enums.GetData, "Success", fmt.Sprintf("%+v", configProductsRelated)))
+	// 3. Item original
 	originalItem, err := p.getProductsRelated(ctx, countryID, itemID)
 	if err != nil {
 		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,
 			fmt.Sprintf("Error getting original item's brand: %v", err))
-		return []model.ProductsRelatedItem{}, nil
+		return nil, nil
 	}
 
-	if len(originalItem.IDSuggested) == 0 {
-		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog,
-			fmt.Sprintf("id suggested not found for item %s", itemID))
+	// 4. Obtener productos relacionados desde Algolia
+	productsFromAlgolia := p.fetchFromAlgolia(ctx, countryID, itemID, originalItem, configProductsRelated, correlationID)
 
-		return []model.ProductsRelatedItem{}, nil
+	// 5. Procesar y mapear resultados
+	rs := p.processProducts(productsFromAlgolia)
+
+	// 6. Guardar en caché si hay resultados
+	p.saveInCacheIfNotEmpty(ctx, countryID, itemID, rs, correlationID)
+
+	return rs, nil
+}
+
+func getCorrelationIDFromContext(ctx *gin.Context) string {
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk {
+			return idStr
+		}
 	}
+	return utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+}
 
+func (p *productsRelated) getFromCache(ctx *gin.Context, countryID, itemID, correlationID string) ([]model.ProductsRelatedItem, bool) {
+	var rs []model.ProductsRelatedItem
+	err := findProductsRelatedInCache(ctx, p.outPortCache, countryID, itemID, &rs)
+	if err == nil && len(rs) > 0 {
+		log.Infof(enums.LogFormat, correlationID, GetRelatedItemsLog, "Successfully retrieved from cache")
+		return rs, true
+	}
+	if err != nil {
+		log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Cache find error: %v", err))
+	}
+	return nil, false
+}
+
+func (p *productsRelated) fetchFromAlgolia(
+	ctx *gin.Context, countryID, itemID string,
+	originalItem sharedModel.ProductInformation,
+	configProductsRelated sharedModel.ConfigBestSeller,
+	correlationID string,
+) []sharedModel.ProductInformation {
+	mediaDescription := originalItem.MediaDescription
+	words := utils.SplitWords(mediaDescription)
+	seen := make(map[string]struct{})
 	var productsFromAlgolia []sharedModel.ProductInformation
 
-	for _, id := range originalItem.IDSuggested {
-		idSuggestStr := strconv.Itoa(id)
+	for len(productsFromAlgolia) <= config.Enviroments.MaxItemsSubstitute && len(words) > 1 {
+		words = words[:len(words)-1]
+		queryDescription := utils.JoinWords(words)
 
-		items, err := p.getProductsRelatedItemsFromAlgolia(
-			ctx,
-			countryID,
-			idSuggestStr,
-			itemID,
-			configProductsRelated,
-		)
+		items, err := p.getProductsRelatedItemsFromAlgolia(ctx, countryID, queryDescription, itemID, configProductsRelated)
 		if err != nil {
 			log.Warnf(enums.LogFormat, correlationID, getProductsRelatedItemsFromAlgoliaLog,
-				fmt.Sprintf("Failed for idSuggest=%s: %v", idSuggestStr, err))
+				fmt.Sprintf("Failed for query='%s': %v", queryDescription, err))
 			continue
 		}
 
-		productsFromAlgolia = append(productsFromAlgolia, items...)
-	}
-
-	var processedItems []sharedModel.ProductInformation
-	for _, product := range productsFromAlgolia {
-		if p.shouldIncludeProduct(product) {
-			processedItems = append(processedItems, product)
+		for _, item := range items {
+			if _, exists := seen[item.ObjectID]; !exists {
+				productsFromAlgolia = append(productsFromAlgolia, item)
+				seen[item.ObjectID] = struct{}{}
+			}
 		}
 	}
+	return productsFromAlgolia
+}
 
-	sort.SliceStable(processedItems, func(i, j int) bool {
-		return len(processedItems[i].StoresWithStock) > len(processedItems[j].StoresWithStock)
+func (p *productsRelated) processProducts(products []sharedModel.ProductInformation) []model.ProductsRelatedItem {
+	sort.SliceStable(products, func(i, j int) bool {
+		return len(products[i].StoresWithStock) > len(products[j].StoresWithStock)
 	})
 
-	for _, productInfo := range processedItems {
-		mappedItem := mappers.MapProductInformationToProductsRelatedItem(&productsRelatedItem, &productInfo)
-		rs = append(rs, mappedItem)
+	var rs []model.ProductsRelatedItem
+	var productsRelatedItem model.ProductsRelatedItem
+	for _, productInfo := range products {
+		rs = append(rs, mappers.MapProductInformationToProductsRelatedItem(&productsRelatedItem, &productInfo))
 	}
+	return rs
+}
 
+func (p *productsRelated) saveInCacheIfNotEmpty(ctx *gin.Context, countryID, itemID string, rs []model.ProductsRelatedItem, correlationID string) {
 	if len(rs) > 0 {
-		err = saveProductsRelatedInCache(ctx, p.outPortCache, countryID, itemID, rs)
-		if err != nil {
+		if err := saveProductsRelatedInCache(ctx, p.outPortCache, countryID, itemID, rs); err != nil {
 			log.Warnf(enums.LogFormat, correlationID, GetRelatedItemsLog, fmt.Sprintf("Cache save error: %v", err))
 		}
 	}
-
-	log.Infof(enums.LogFormat, correlationID, GetRelatedItemsLog, "Successfully retrieved and processed products related items")
-	return rs, nil
 }
 
 func findProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	countryID, itemID string, response *[]model.ProductsRelatedItem) error {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
+	correlationID := getCorrelationIDFromContext(ctx)
 	cacheKey := fmt.Sprintf(keyRelatedProductsCache, countryID, itemID)
 	cachedData, err := outPortCache.Get(ctx, cacheKey)
 
@@ -182,16 +193,7 @@ func findProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Ca
 }
 
 func (p *productsRelated) getProductsRelated(ctx *gin.Context, countryID, itemID string) (sharedModel.ProductInformation, error) {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
-	// Asegurarse de que el header X-Custom-City se propaga si está presente
+	correlationID := getCorrelationIDFromContext(ctx)
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
 
 	items, err := p.outPortCatalogProduct.GetProductsInformationByObjectID(ctx, []string{itemID}, countryID)
@@ -209,22 +211,13 @@ func (p *productsRelated) getProductsRelated(ctx *gin.Context, countryID, itemID
 	return items[0], nil
 }
 
-func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, countryID string, idSuggest string, excludeItemID string, configProductsRelated sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
+func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, countryID string, queryDescription string, excludeItemID string, configProductsRelated sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
+	correlationID := getCorrelationIDFromContext(ctx)
 
-	query := fmt.Sprintf(configProductsRelated.QueryProducts, strconv.Itoa(configProductsRelated.CountItems), idSuggest)
-	// Asegurarse de que el header X-Custom-City se propaga
+	query := fmt.Sprintf(configProductsRelated.QueryProducts, strconv.Itoa(configProductsRelated.CountItems))
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
 
-	products, err := p.outPortCatalogProduct.GetProductsInformationByQuery(ctx, query, countryID)
+	products, err := p.outPortCatalogProduct.GetProductsInformationByQueryRelated(ctx, query, countryID, queryDescription)
 	if err != nil {
 		log.Errorf(enums.LogFormat, correlationID, getProductsRelatedItemsFromAlgoliaLog,
 			fmt.Sprintf("Error from CatalogProduct port: %v. Query: '%s', Repo: %s", err, query, indexCatalogProducts))
@@ -243,16 +236,8 @@ func (p *productsRelated) getProductsRelatedItemsFromAlgolia(ctx *gin.Context, c
 
 func saveProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	countryID, itemID string, rs []model.ProductsRelatedItem) error {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
-	if len(rs) == 0 { // No guardar en caché si no hay resultados
+	correlationID := getCorrelationIDFromContext(ctx)
+	if len(rs) == 0 {
 		return nil
 	}
 
@@ -264,7 +249,6 @@ func saveProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Ca
 		return errMarshal
 	}
 
-	// Usar el TTL correcto de las variables de entorno
 	ttl := time.Duration(config.Enviroments.RedisProductsRelatedDepartmentTTL) * time.Minute
 	if ttl <= 0 {
 		ttl = 60 * time.Minute
@@ -282,12 +266,4 @@ func saveProductsRelatedInCache(ctx *gin.Context, outPortCache sharedOutPorts.Ca
 	log.Debugf(enums.LogFormat, correlationID, GetRelatedItemsLog,
 		fmt.Sprintf("Successfully saved to cache. Key: %s, TTL: %v", cacheKey, ttl))
 	return nil
-}
-
-func (p *productsRelated) shouldIncludeProduct(product sharedModel.ProductInformation) bool {
-	if len(product.StoresWithStock) == 0 || product.Status != "A" {
-		return false
-	}
-
-	return true
 }

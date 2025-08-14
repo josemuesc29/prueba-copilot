@@ -76,6 +76,10 @@ func handleResponse[T any](resp *http.Response, response *T, correlationID strin
 		return errors.New(string(resBody))
 	}
 
+	if resp.StatusCode == http.StatusNoContent && len(resBody) == 0 {
+		return nil
+	}
+
 	if err = json.Unmarshal(resBody, response); err != nil {
 		log.Printf("[%s] failed to unmarshal JSON: %v", correlationID, err)
 		return err

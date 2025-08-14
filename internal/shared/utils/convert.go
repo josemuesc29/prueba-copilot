@@ -1,6 +1,9 @@
 package utils
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 func AnyToBool(value any) bool {
 	switch v := value.(type) {
@@ -54,4 +57,12 @@ func StringToInt64(value string) int64 {
 		return 0
 	}
 	return response
+}
+
+func SplitWords(input string) []string {
+	return strings.Fields(input)
+}
+
+func JoinWords(words []string) string {
+	return strings.Join(words, " ")
 }

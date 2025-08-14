@@ -8,7 +8,7 @@ import (
 
 func TestBestSellerEntity_TableName(t *testing.T) {
 	entity := BestSellerEntity{}
-	assert.Equal(t, "catalog_item.best_sellers", entity.TableName())
+	assert.Equal(t, "catalog.best_sellers", entity.TableName())
 }
 
 func TestBestSellerEntity_Fields(t *testing.T) {

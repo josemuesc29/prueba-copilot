@@ -12,5 +12,5 @@ type BestSellerEntity struct {
 }
 
 func (BestSellerEntity) TableName() string {
-	return "catalog_item.best_sellers"
+	return "catalog.best_sellers"
 }

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	keyItemDetailInCache = "item_detail_%s"
+	keyItemDetailInCache = "item_detail_%s_%s"
 	serviceName          = "app.GetItemDetail"
 )
 
@@ -34,11 +34,6 @@ func NewItemDetail(outPortCache sharedOutPorts.Cache, outPortCatalogProduct shar
 func (i *itemDetail) GetDetailProduct(c *gin.Context) (model.ItemDetail, error) {
 	var itemDetail model.ItemDetail
 
-	i.findItemDetailInCache(c, c.Param("countryId"), &itemDetail)
-	if itemDetail.ID != "" {
-		return itemDetail, nil
-	}
-
 	countryId := c.Param("countryId")
 	if countryId == "" {
 		return model.ItemDetail{}, fmt.Errorf("countryId is required")
@@ -47,6 +42,11 @@ func (i *itemDetail) GetDetailProduct(c *gin.Context) (model.ItemDetail, error) 
 	itemId := c.Param("id")
 	if itemId == "" {
 		return model.ItemDetail{}, fmt.Errorf("itemId is required")
+	}
+
+	i.findItemDetailInCache(c, countryId, itemId, &itemDetail)
+	if itemDetail.ID != "" {
+		return itemDetail, nil
 	}
 
 	productInformation, err := i.outPortCatalogProduct.GetProductInformation(c, itemId)
@@ -64,12 +64,12 @@ func (i *itemDetail) GetDetailProduct(c *gin.Context) (model.ItemDetail, error) 
 		return model.ItemDetail{}, fmt.Errorf("error al mapear los datos del producto: %w", err)
 	}
 
-	i.saveItemDetailInCache(c, countryId, &itemDetail)
+	i.saveItemDetailInCache(c, countryId, itemId, &itemDetail)
 	return itemDetail, nil
 }
 
-func (i *itemDetail) findItemDetailInCache(c *gin.Context, countryID string, resp *model.ItemDetail) {
-	flashOfferCache, err := i.outPortCache.Get(c.Request.Context(), fmt.Sprintf(keyItemDetailInCache, countryID))
+func (i *itemDetail) findItemDetailInCache(c *gin.Context, countryID string, itemId string, resp *model.ItemDetail) {
+	flashOfferCache, err := i.outPortCache.Get(c.Request.Context(), fmt.Sprintf(keyItemDetailInCache, countryID, itemId))
 
 	if err != nil {
 		log.Printf(enums.LogFormat, c.Value(enums.HeaderCorrelationID), serviceName, fmt.Sprintf("Error getting item detail from cache: %v", err.Error()))
@@ -88,7 +88,7 @@ func (i *itemDetail) findItemDetailInCache(c *gin.Context, countryID string, res
 	}
 }
 
-func (i *itemDetail) saveItemDetailInCache(c *gin.Context, countryID string, resp *model.ItemDetail) {
+func (i *itemDetail) saveItemDetailInCache(c *gin.Context, countryID string, itemId string, resp *model.ItemDetail) {
 
 	if resp == nil {
 		log.Printf(enums.LogFormat, c.Value(enums.HeaderCorrelationID), serviceName, "No item detail to save in cache")
@@ -101,8 +101,8 @@ func (i *itemDetail) saveItemDetailInCache(c *gin.Context, countryID string, res
 			fmt.Sprintf("Error marshaling flash offers for cache: %v", errMarshal))
 		return
 	} else {
-		err := i.outPortCache.Set(c, fmt.Sprintf(keyItemDetailInCache, countryID), string(respByte),
-			time.Duration(config.Enviroments.RedisItemDetailTTL)*time.Minute)
+		err := i.outPortCache.Set(c, fmt.Sprintf(keyItemDetailInCache, countryID, itemId), string(respByte),
+			time.Duration(config.Enviroments.RedisTextSeoTTL)*time.Minute)
 
 		if err != nil {
 			log.Printf(enums.LogFormat, c.Value(enums.HeaderCorrelationID), serviceName, fmt.Sprintf("Error saving flash offers in cache: %v", err.Error()))

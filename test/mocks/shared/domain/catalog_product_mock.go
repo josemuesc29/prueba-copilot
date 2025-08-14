@@ -85,3 +85,18 @@ func (mr *MockCatalogProductMockRecorder) GetProductsInformationByQuery(c, param
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsInformationByQuery", reflect.TypeOf((*MockCatalogProduct)(nil).GetProductsInformationByQuery), c, params, countryID)
 }
+
+// GetProductsInformationByQueryRelated mocks base method.
+func (m *MockCatalogProduct) GetProductsInformationByQueryRelated(c *gin.Context, params, countryID, queryDescription string) ([]model.ProductInformation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductsInformationByQueryRelated", c, params, countryID, queryDescription)
+	ret0, _ := ret[0].([]model.ProductInformation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductsInformationByQueryRelated indicates an expected call of GetProductsInformationByQueryRelated.
+func (mr *MockCatalogProductMockRecorder) GetProductsInformationByQueryRelated(c, params, countryID, queryDescription any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsInformationByQueryRelated", reflect.TypeOf((*MockCatalogProduct)(nil).GetProductsInformationByQueryRelated), c, params, countryID, queryDescription)
+}

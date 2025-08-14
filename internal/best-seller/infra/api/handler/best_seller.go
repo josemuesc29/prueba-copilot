@@ -62,7 +62,7 @@ func (h bestSeller) GetBestSellerDepartment(c *gin.Context) {
 
 	if err != nil {
 		log.Printf(enums.LogFormat, correlationID, getBestSellerDepartmentLog, fmt.Sprintf(enums.GetData, "error", serviceBestSeller))
-		response.ServerError(c, err.Error())
+		response.ConflictError(c, err.Error())
 		return
 	}
 

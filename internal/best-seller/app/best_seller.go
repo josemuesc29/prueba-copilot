@@ -24,7 +24,7 @@ const (
 	getBestSellersInAlgoliaByQueryLog = "BestSellerService.GetBestSellersInAlgoliaByQuery"
 	executeGetAllProductsInfoLog      = "CarouselService.executeGetAllProductsInfo"
 	findBestSellerInCacheLog          = "BestSellerService.findBestSellerInCache"
-	repositoryConfig                  = "repository config"
+	repositoryConfig                  = "repository client"
 	repositoryCategory                = "repository category"
 	repositoryBestSellerDB            = "repository best sellers db"
 	repositoryCache                   = "repository cache"

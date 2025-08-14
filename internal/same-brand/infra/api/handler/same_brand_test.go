@@ -29,10 +29,6 @@ func TestSameBrandHandler_GetItemsSameBrand_Success(t *testing.T) {
 	itemID := "item123"
 	correlationID := "corr-id-success"
 	cityHeader := "Bogota"
-	source := "WEB"
-	nearbyStores := "24,25,26"
-	storeId := "26"
-	city := "Bogota"
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -40,7 +36,7 @@ func TestSameBrandHandler_GetItemsSameBrand_Success(t *testing.T) {
 
 	router.GET("/catalog-item/r/:countryId/v1/item/:itemId/same-brand", handler.GetItemsSameBrand)
 
-	url := fmt.Sprintf("/catalog-item/r/%s/v1/item/%s/same-brand?source=%s&nearbyStores=%s&storeId=%s&city=%s", countryID, itemID, source, nearbyStores, storeId, city)
+	url := fmt.Sprintf("/catalog-item/r/%s/v1/item/%s/same-brand", countryID, itemID)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set(enums.HeaderCorrelationID, correlationID)
 	req.Header.Set(enums.HeaderXCustomCity, cityHeader)
@@ -49,8 +45,8 @@ func TestSameBrandHandler_GetItemsSameBrand_Success(t *testing.T) {
 		{ID: "prod1", Brand: "BrandX", TotalStock: 10, Status: "A", MediaImageUrl: "img.jpg", URL: "url1"},
 	}
 
-	mockAppService.EXPECT().GetItemsBySameBrand(gomock.Any(), countryID, itemID, source, nearbyStores, storeId, city).DoAndReturn(
-		func(ctx *gin.Context, cID, iID, src, nearby, sId, cty string) ([]model.SameBrandItem, error) {
+	mockAppService.EXPECT().GetItemsBySameBrand(gomock.Any(), countryID, itemID).DoAndReturn(
+		func(ctx *gin.Context, cID, iID string) ([]model.SameBrandItem, error) {
 			assert.Equal(t, correlationID, ctx.Value(enums.HeaderCorrelationID))
 			assert.Equal(t, cityHeader, ctx.GetHeader(enums.HeaderXCustomCity))
 			return serviceResponse, nil
@@ -100,26 +96,21 @@ func TestSameBrandHandler_GetItemsSameBrand_AppServiceError(t *testing.T) {
 	countryID := "CO"
 	itemID := "item456"
 	correlationID := "corr-id-app-error"
-	source := "WEB"
-	nearbyStores := "24,25,26"
-	storeId := "26"
-	city := "Bogota"
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
 	_, router := gin.CreateTestContext(w)
 	router.GET("/catalog-item/r/:countryId/v1/item/:itemId/same-brand", handler.GetItemsSameBrand)
 
-	url := fmt.Sprintf("/catalog-item/r/%s/v1/item/%s/same-brand?source=%s&nearbyStores=%s&storeId=%s&city=%s", countryID, itemID, source, nearbyStores, storeId, city)
+	url := fmt.Sprintf("/catalog-item/r/%s/v1/item/%s/same-brand", countryID, itemID)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set(enums.HeaderCorrelationID, correlationID)
 
 	expectedError := errors.New("database is down")
 	mockAppService.
 		EXPECT().
-		GetItemsBySameBrand(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx *gin.Context, countryID, itemID, source, nearbyStores, storeId, city string) ([]model.SameBrandItem, error) {
-			t.Logf("source=%s", source) // <- para validar que sea "WEB"
+		GetItemsBySameBrand(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx *gin.Context, countryID, itemID string) ([]model.SameBrandItem, error) {
 			return nil, expectedError
 		})
 	router.ServeHTTP(w, req)

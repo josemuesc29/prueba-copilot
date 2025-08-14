@@ -19,6 +19,7 @@ const (
 	retry                 = 1
 	urlCatalogCategory    = "%s/catalog/r/%s/v1/categories/%s"
 	errorValidateResponse = "[%s] error in response data. Code: %s, value.active: %v"
+	errorNotFoundData     = "[%s] error not found data for category: %s"
 )
 
 type catalogCategory struct {
@@ -50,6 +51,12 @@ func (t catalogCategory) GetCategoryByDepartment(ctx *gin.Context, countryID, de
 			Context: ctx,
 		},
 		&resp)
+
+	if resp.Data.Name == "" && resp.Code == "" && err == nil {
+		log.Println(fmt.Sprintf(errorNotFoundData,
+			correlationID, departmentID))
+		return model.CatalogCategory{}, fmt.Errorf("not found data for category: %s", departmentID)
+	}
 
 	if resp.Code != "OK" || !resp.Data.Active {
 		log.Println(fmt.Sprintf(errorValidateResponse,

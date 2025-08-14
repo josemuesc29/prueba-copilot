@@ -47,97 +47,114 @@ func NewSameBrand(
 	}
 }
 
-func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID, source, nearbyStores, storeId, city string) ([]model.SameBrandItem, error) {
-	var sameBrandItem model.SameBrandItem
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
+func (s *sameBrand) GetItemsBySameBrand(ctx *gin.Context, countryID, itemID string) ([]model.SameBrandItem, error) {
+	correlationID := getCorrelationIDFromContext(ctx)
 	var rs []model.SameBrandItem
 
-	// 1. Intenta obtener de la caché
-	err := findSameBrandInCache(ctx, s.outPortCache, countryID, itemID, &rs)
-	if err == nil && len(rs) > 0 {
-		log.Infof(enums.LogFormat, correlationID, GetItemsBySameBrandLog, "Successfully retrieved from cache")
+	// 1. Intentar obtener desde cache
+	if s.tryGetFromCache(ctx, countryID, itemID, &rs, correlationID) {
 		return rs, nil
+	}
+
+	// 2. Obtener configuración Same Brand
+	configSameBrand, err := s.getSameBrandConfig(ctx, countryID, correlationID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Obtener el item original para identificar la marca
+	originalItem, err := s.getItemBrand(ctx, countryID, itemID)
+	if err != nil {
+		return nil, err
+	}
+	if originalItem.Marca == "" {
+		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
+			fmt.Sprintf("Brand not found for item %s", itemID))
+		return []model.SameBrandItem{}, nil
+	}
+
+	// 4. Consultar productos de la misma marca
+	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Marca, itemID, configSameBrand)
+	if err != nil {
+		return nil, err
+	}
+
+	// 5. Filtrar, ordenar y mapear
+	rs = s.processSameBrandItems(productsFromAlgolia)
+
+	// 6. Guardar en cache
+	s.saveToCache(ctx, countryID, itemID, rs, correlationID)
+
+	return rs, nil
+}
+
+func getCorrelationIDFromContext(ctx *gin.Context) string {
+	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
+		if idStr, typeOk := id.(string); typeOk && idStr != "" {
+			return idStr
+		}
+	}
+	return utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
+}
+
+func (s *sameBrand) tryGetFromCache(ctx *gin.Context, countryID, itemID string, rs *[]model.SameBrandItem, correlationID string) bool {
+	err := findSameBrandInCache(ctx, s.outPortCache, countryID, itemID, rs)
+	if err == nil && len(*rs) > 0 {
+		log.Infof(enums.LogFormat, correlationID, GetItemsBySameBrandLog, "Successfully retrieved from cache")
+		return true
 	}
 	if err != nil {
 		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, fmt.Sprintf("Cache find error: %v", err))
 	}
+	return false
+}
 
+func (s *sameBrand) getSameBrandConfig(ctx *gin.Context, countryID, correlationID string) (sharedModel.ConfigBestSeller, error) {
 	configSameBrand, err := s.outPortConfig.GetConfigBestSeller(ctx, countryID, configSameBrandKey)
 	if err != nil {
-		log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetItemsBySameBrandLog,
+		log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 			fmt.Sprintf(enums.GetData, "error", "repositoryConfig"))
-		return nil, err
 	}
-
-	log.Printf(enums.LogFormat, ctx.Value(enums.HeaderCorrelationID), GetItemsBySameBrandLog,
+	log.Printf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
 		fmt.Sprintf(enums.GetData, "Success", fmt.Sprintf("%+v", configSameBrand)))
-	originalItem, err := s.getItemBrand(ctx, countryID, itemID)
-	if err != nil {
-		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
-			fmt.Sprintf("Error getting original item's brand: %v", err))
-		return nil, err
-	}
+	return configSameBrand, err
+}
 
-	if originalItem.Marca == "" {
-		log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
-			fmt.Sprintf("Brand not found for item %s", itemID))
+func (s *sameBrand) processSameBrandItems(products []sharedModel.ProductInformation) []model.SameBrandItem {
+	var rs []model.SameBrandItem
+	var sameBrandItem model.SameBrandItem
 
-		return []model.SameBrandItem{}, nil
-	}
-
-	productsFromAlgolia, err := s.getBrandItemsFromAlgolia(ctx, countryID, originalItem.Marca, itemID, source, nearbyStores, storeId, city, configSameBrand)
-	if err != nil {
-		log.Errorf(enums.LogFormat, correlationID, GetItemsBySameBrandLog,
-			fmt.Sprintf("Error getting brand items from Algolia: %v", err))
-		return nil, err
-	}
-
-	var processedItems []sharedModel.ProductInformation
-	for _, product := range productsFromAlgolia {
+	// Filtrar
+	var processed []sharedModel.ProductInformation
+	for _, product := range products {
 		if s.shouldIncludeProduct(product) {
-			processedItems = append(processedItems, product)
+			processed = append(processed, product)
 		}
 	}
 
-	sort.SliceStable(processedItems, func(i, j int) bool {
-		return len(processedItems[i].StoresWithStock) > len(processedItems[j].StoresWithStock)
+	// Ordenar
+	sort.SliceStable(processed, func(i, j int) bool {
+		return len(processed[i].StoresWithStock) > len(processed[j].StoresWithStock)
 	})
 
-	for _, productInfo := range processedItems {
-		mappedItem := mappers.MapProductInformationToSameBrandItem(&sameBrandItem, &productInfo)
-		rs = append(rs, mappedItem)
+	// Mapear
+	for _, productInfo := range processed {
+		mapped := mappers.MapProductInformationToSameBrandItem(&sameBrandItem, &productInfo)
+		rs = append(rs, mapped)
 	}
+	return rs
+}
 
+func (s *sameBrand) saveToCache(ctx *gin.Context, countryID, itemID string, rs []model.SameBrandItem, correlationID string) {
 	if len(rs) > 0 {
-		err = saveSameBrandInCache(ctx, s.outPortCache, countryID, itemID, rs)
-		if err != nil {
+		if err := saveSameBrandInCache(ctx, s.outPortCache, countryID, itemID, rs); err != nil {
 			log.Warnf(enums.LogFormat, correlationID, GetItemsBySameBrandLog, fmt.Sprintf("Cache save error: %v", err))
 		}
 	}
-
-	log.Infof(enums.LogFormat, correlationID, GetItemsBySameBrandLog, "Successfully retrieved and processed same brand items")
-	return rs, nil
 }
 
 func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sharedModel.ProductInformation, error) {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
-	// Asegurarse de que el header X-Custom-City se propaga si está presente
+	correlationID := getCorrelationIDFromContext(ctx)
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
 
 	items, err := s.outPortCatalogProduct.GetProductsInformationByObjectID(ctx, []string{itemID}, countryID)
@@ -155,19 +172,9 @@ func (s *sameBrand) getItemBrand(ctx *gin.Context, countryID, itemID string) (sh
 	return items[0], nil
 }
 
-func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID, source, nearbyStores, storeId, city string, configSameBrand sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
-
+func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand, excludeItemID string, configSameBrand sharedModel.ConfigBestSeller) ([]sharedModel.ProductInformation, error) {
+	correlationID := getCorrelationIDFromContext(ctx)
 	query := fmt.Sprintf(configSameBrand.QueryProducts, strconv.Itoa(configSameBrand.CountItems), brand)
-	// Asegurarse de que el header X-Custom-City se propaga
 	utils.PropagateHeader(ctx, enums.HeaderXCustomCity)
 
 	products, err := s.outPortCatalogProduct.GetProductsInformationByQuery(ctx, query, countryID)
@@ -188,24 +195,13 @@ func (s *sameBrand) getBrandItemsFromAlgolia(ctx *gin.Context, countryID, brand,
 }
 
 func (s *sameBrand) shouldIncludeProduct(product sharedModel.ProductInformation) bool {
-	if len(product.StoresWithStock) == 0 || product.Status != "A" {
-		return false
-	}
-
+	// Aquí podrías aplicar filtros adicionales si es necesario
 	return true
 }
 
 func findSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	countryID, itemID string, response *[]model.SameBrandItem) error {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
+	correlationID := getCorrelationIDFromContext(ctx)
 	cacheKey := fmt.Sprintf(keySameBrandCache, countryID, itemID)
 	cachedData, err := outPortCache.Get(ctx, cacheKey)
 
@@ -235,16 +231,8 @@ func findSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 
 func saveSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 	countryID, itemID string, rs []model.SameBrandItem) error {
-	var correlationID string
-	if id, ok := ctx.Get(enums.HeaderCorrelationID); ok {
-		if idStr, typeOk := id.(string); typeOk {
-			correlationID = idStr
-		}
-	}
-	if correlationID == "" {
-		correlationID = utils.GetCorrelationID(ctx.GetHeader(enums.HeaderCorrelationID))
-	}
-	if len(rs) == 0 { // No guardar en caché si no hay resultados
+	correlationID := getCorrelationIDFromContext(ctx)
+	if len(rs) == 0 { // No guardar si está vacío
 		return nil
 	}
 
@@ -256,7 +244,6 @@ func saveSameBrandInCache(ctx *gin.Context, outPortCache sharedOutPorts.Cache,
 		return errMarshal
 	}
 
-	// Usar el TTL correcto de las variables de entorno
 	ttl := time.Duration(config.Enviroments.RedisSameBrandDepartmentTTL) * time.Minute
 	if ttl <= 0 {
 		ttl = 60 * time.Minute

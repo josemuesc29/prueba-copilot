@@ -17,9 +17,13 @@ import (
 	sameBrandService "ftd-td-catalog-item-read-services/internal/same-brand/app"
 	sameBrandGroup "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/groups"
 	sameBrandHandler "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/handler"
+	seoService "ftd-td-catalog-item-read-services/internal/seo/app"
+	seoGroup "ftd-td-catalog-item-read-services/internal/seo/infra/api/groups"
+	seoHandler "ftd-td-catalog-item-read-services/internal/seo/infra/api/handler"
 	cacheClient "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/cache/client"
 	sharedCacheRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/cache/repository"
-	configDatabase "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/database/config"
+	configDatabase "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/database/client"
+	sharedDBRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/database/repository"
 	sharedCatalogCategoryRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/http/catalog_category/repository"
 	sharedCatalogProductsRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/http/catalog_products/repository"
 	sharedConfigRepository "ftd-td-catalog-item-read-services/internal/shared/infra/adapters/http/config/repository"
@@ -41,6 +45,7 @@ func BuildContainer() *dig.Container {
 		productsRelatedHandler.NewProductsRelatedHandler,
 		detailHandler.NewDetailHandler,
 		structureHandler.NewItemStructureHandler,
+		seoHandler.NewSeoHandler,
 		// Groups
 		healthGroup.NewHealthGroup,
 		bestSellerGroup.NewBestSeller,
@@ -48,6 +53,7 @@ func BuildContainer() *dig.Container {
 		productsRelatedGroup.NewProductsRelatedGroup,
 		detailGroup.NewDetailGroup,
 		structureGroup.NewStructureGroup,
+		seoGroup.NewSeoGroup,
 		// Database
 		configDatabase.NewPostgresConnection,
 
@@ -58,6 +64,7 @@ func BuildContainer() *dig.Container {
 		sharedCatalogProductsRepository.NewCatalogProduct,
 		sharedCacheRepository.NewCache,
 		structureRepository.NewItemStructureRepository,
+		sharedDBRepository.NewItemSeoRepository,
 
 		// Services
 		bestSellerService.NewBestSeller,
@@ -65,6 +72,7 @@ func BuildContainer() *dig.Container {
 		productsRelatedService.NewProductsRelated,
 		detailService.NewItemDetail,
 		structureService.NewItemStructureService,
+		seoService.NewProductSeo,
 		// Router
 		router.NewRouter,
 

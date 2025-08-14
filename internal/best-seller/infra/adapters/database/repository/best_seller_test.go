@@ -28,7 +28,7 @@ func TestGetBestSellerDepartment_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"country_id", "department_id", "item_best_seller_id", "item_id", "create_date", "update_date"}).
 		AddRow("CO", "12", "bs-1", "item-1", time.Now(), time.Now())
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "catalog_item"."best_sellers" WHERE country_id = $1 AND department_id = $2 ORDER BY create_date DESC`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "catalog"."best_sellers" WHERE country_id = $1 AND department_id = $2 ORDER BY create_date DESC`)).
 		WithArgs("CO", "12").
 		WillReturnRows(rows)
 
@@ -43,7 +43,7 @@ func TestGetBestSellerDepartment_DBError(t *testing.T) {
 	db, mock := setupMockDB(t)
 	repo := NewBestSellerRepository(db)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "catalog_item"."best_sellers" WHERE country_id = $1 AND department_id = $2 ORDER BY create_date DESC`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "catalog"."best_sellers" WHERE country_id = $1 AND department_id = $2 ORDER BY create_date DESC`)).
 		WithArgs("CO", "12").
 		WillReturnError(errors.New("db error"))
 
