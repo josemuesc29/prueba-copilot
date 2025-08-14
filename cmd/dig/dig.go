@@ -31,6 +31,10 @@ import (
 	structureRepository "ftd-td-catalog-item-read-services/internal/structure/infra/adapters/http/cms/repository"
 	structureGroup "ftd-td-catalog-item-read-services/internal/structure/infra/api/groups"
 	structureHandler "ftd-td-catalog-item-read-services/internal/structure/infra/api/handler"
+	totalStockService "ftd-td-catalog-item-read-services/internal/total-stock/app"
+	totalStockRepository "ftd-td-catalog-item-read-services/internal/total-stock/infra/adapters/database/repository"
+	totalStockGroup "ftd-td-catalog-item-read-services/internal/total-stock/infra/api/groups"
+	totalStockHandler "ftd-td-catalog-item-read-services/internal/total-stock/infra/api/handler"
 	"go.uber.org/dig"
 )
 
@@ -46,6 +50,7 @@ func BuildContainer() *dig.Container {
 		detailHandler.NewDetailHandler,
 		structureHandler.NewItemStructureHandler,
 		seoHandler.NewSeoHandler,
+		totalStockHandler.NewTotalStockHandler,
 		// Groups
 		healthGroup.NewHealthGroup,
 		bestSellerGroup.NewBestSeller,
@@ -54,11 +59,13 @@ func BuildContainer() *dig.Container {
 		detailGroup.NewDetailGroup,
 		structureGroup.NewStructureGroup,
 		seoGroup.NewSeoGroup,
+		totalStockGroup.NewTotalStockGroup,
 		// Database
 		configDatabase.NewPostgresConnection,
 
 		// Repository
 		bestSellerRepository.NewBestSellerRepository,
+		totalStockRepository.NewTotalStockRepository,
 		sharedConfigRepository.NewConfig,
 		sharedCatalogCategoryRepository.NewCatalogCategory,
 		sharedCatalogProductsRepository.NewCatalogProduct,
@@ -68,6 +75,7 @@ func BuildContainer() *dig.Container {
 
 		// Services
 		bestSellerService.NewBestSeller,
+		totalStockService.NewTotalStockService,
 		sameBrandService.NewSameBrand,
 		productsRelatedService.NewProductsRelated,
 		detailService.NewItemDetail,

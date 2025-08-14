@@ -19,6 +19,7 @@ type configEnv struct {
 	RedisBestSellerDepartmentTTL      int64  `env:"REDIS_BEST_SELLER_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
 	RedisSameBrandDepartmentTTL       int64  `env:"REDIS_SAME_BRAND_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
 	RedisProductsRelatedDepartmentTTL int64  `env:"REDIS_PRODUCTS_RELATED_DEPARMENT_TTL"  default:"720" usage:"application id for catalog products"`
+	RedisTotalStockTTL                int64  `env:"REDIS_TOTAL_STOCK_TTL"  default:"720" usage:"ttl for total stock cache in redis"`
 	MaxItemsSubstitute                int    `env:"MAX_ITEMS_SUBSTITUTE"  default:"100" usage:"max substitute for products"`
 	RedisItemDetailTTL                int64  `env:"REDIS_ITEM_DETAIL_TTL" default:"720" usage:"ttl for item detail cache in redis"`
 	RedisItemStructureTTL             int64  `env:"REDIS_ITEM_STRUCTURE_TTL" default:"720" usage:"ttl for items structure  cache in redis"`

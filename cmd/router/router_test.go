@@ -10,6 +10,7 @@ import (
 	mockSameBrandGroups "ftd-td-catalog-item-read-services/test/mocks/same-brand/infra/api/groups"
 	mockSeoGroups "ftd-td-catalog-item-read-services/test/mocks/seo/infra/api/groups"
 	mockStructureGroups "ftd-td-catalog-item-read-services/test/mocks/structure/infra/api/groups"
+	mockTotalStockGroups "ftd-td-catalog-item-read-services/test/mocks/total-stock/infra/api/groups"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -25,6 +26,7 @@ func TestRouterConfigWhenSuccess(t *testing.T) {
 	detailGroup := mockDetailBrandGroups.NewMockGroup(controller)
 	structureGroup := mockStructureGroups.NewMockStructure(controller)
 	seoGroup := mockSeoGroups.NewMockGroup(controller)
+	totalStockGroup := mockTotalStockGroups.NewMockTotalStockGroup(controller)
 
 	healthGroup.EXPECT().Source(gomock.Any()).Times(1)
 	bestSellerGroup.EXPECT().Source(gomock.Any()).Times(1)
@@ -33,8 +35,9 @@ func TestRouterConfigWhenSuccess(t *testing.T) {
 	detailGroup.EXPECT().Source(gomock.Any()).Times(1)
 	structureGroup.EXPECT().Source(gomock.Any()).Times(1)
 	seoGroup.EXPECT().Source(gomock.Any()).Times(1)
+	totalStockGroup.EXPECT().RegisterRoutes(gomock.Any()).Times(1)
 
-	router := NewRouter(healthGroup, bestSellerGroup, sameBrandGroup, productsRelatedGroup, detailGroup, structureGroup, seoGroup)
+	router := NewRouter(healthGroup, bestSellerGroup, sameBrandGroup, productsRelatedGroup, detailGroup, structureGroup, seoGroup, totalStockGroup)
 
 	routerConfig := SetupRouter(router)
 

@@ -8,6 +8,7 @@ import (
 	sameBrandGroup "ftd-td-catalog-item-read-services/internal/same-brand/infra/api/groups"
 	seoGroup "ftd-td-catalog-item-read-services/internal/seo/infra/api/groups"
 	structureGroup "ftd-td-catalog-item-read-services/internal/structure/infra/api/groups"
+	totalStockGroup "ftd-td-catalog-item-read-services/internal/total-stock/infra/api/groups"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +23,7 @@ type Router struct {
 	itemDetailGroup      itemDetailGroup.Group
 	structureGroup       structureGroup.Structure
 	seoGroup             seoGroup.Group
+	totalStockGroup      *totalStockGroup.TotalStockGroup
 }
 
 func NewRouter(
@@ -32,6 +34,7 @@ func NewRouter(
 	itemDetailGroup itemDetailGroup.Group,
 	structureGroup structureGroup.Structure,
 	seoGroup seoGroup.Group,
+	totalStockGroup *totalStockGroup.TotalStockGroup,
 ) *Router {
 	return &Router{
 		healthGroup:          healthGroup,
@@ -41,6 +44,7 @@ func NewRouter(
 		itemDetailGroup:      itemDetailGroup,
 		structureGroup:       structureGroup,
 		seoGroup:             seoGroup,
+		totalStockGroup:      totalStockGroup,
 	}
 }
 
@@ -58,6 +62,7 @@ func SetupRouter(r *Router) *gin.Engine {
 	r.itemDetailGroup.Source(router.Group(basePath))
 	r.structureGroup.Source(router.Group(basePath))
 	r.seoGroup.Source(router.Group(basePath))
+	r.totalStockGroup.RegisterRoutes(router.Group("/catalog-item"))
 	return router
 }
 
